@@ -292,6 +292,17 @@ div.block, .padded, .gap {
 /* ── record badge ── */
 .gradio-markdown p { color: #6b7280 !important; font-size: 12px !important; }
 
+
+/* ── remove horizontal scrollbar ── */
+html { overflow-x: hidden !important; }
+body { overflow-x: hidden !important; }
+.gradio-container { overflow-x: hidden !important; max-width: 100vw !important; }
+.gr-row { overflow-x: hidden !important; flex-wrap: wrap !important; }
+.gradio-plot { max-width: 100% !important; overflow: hidden !important; }
+.gradio-plot canvas, .gradio-plot img { max-width: 100% !important; }
+.tabs { max-width: 100% !important; overflow-x: hidden !important; }
+.tab-content { max-width: 100% !important; overflow-x: hidden !important; }
+
 footer { display: none !important; }
 """
 
