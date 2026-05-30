@@ -97,6 +97,8 @@ html, body, .gradio-container {
     box-sizing: border-box !important;
 }
 * { box-sizing: border-box !important; }
+.gr-row { flex-wrap: wrap !important; }
+.block { min-width: 0 !important; }
 
 #dash-header {
     background: linear-gradient(135deg,#1e1e1e,#111);
