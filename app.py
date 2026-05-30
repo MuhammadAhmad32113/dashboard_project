@@ -361,8 +361,33 @@ input[type=number] {
     color: #ffffff !important;
     border-radius: 6px !important;
 }
+/* ── remove black boxes ── */
+.gradio-container .block,
+.gradio-container .form,
+.gradio-container fieldset,
+div.block,
+.svelte-1f354aw,
+.svelte-90oupt,
+.svelte-1hnfib2,
+.padded,
+.gap {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ── bigger text everywhere ── */
+.gradio-container label span { font-size: 15px !important; color: #d1d5db !important; }
+.gradio-container input[type=range] { width: 100% !important; }
+input[type=number] { font-size: 14px !important; background: #2a2a2a !important; border: 1px solid #3a3a3a !important; color: #fff !important; border-radius: 6px !important; }
+.gr-checkbox-group label { font-size: 15px !important; }
+.gradio-container .multiselect span { font-size: 14px !important; }
+.gradio-markdown p { font-size: 14px !important; }
+
+/* ── fix horizontal scroll ── */
 html, body { overflow-x: hidden !important; }
 .gradio-container { overflow-x: hidden !important; max-width: 100vw !important; }
+
 footer { display: none !important; }
 """
 
