@@ -361,6 +361,44 @@ input[type=number] {
     color: #ffffff !important;
     border-radius: 6px !important;
 }
+
+/* ── hide plot icons/labels completely ── */
+.gradio-plot .label-wrap,
+.gradio-plot .icon-buttons,
+.gradio-plot .download-div,
+.gradio-plot button,
+.gr-plot .label-wrap,
+.gr-plot button,
+.plot-container .label-wrap,
+.svelte-1cl284s,
+.top-panel { display: none !important; }
+
+/* ── tab text bigger force ── */
+.tab-nav { gap: 4px !important; }
+.tab-nav button,
+[role="tablist"] button,
+[role="tab"] {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.2px !important;
+}
+[role="tab"][aria-selected="true"] {
+    color: #a5b4fc !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    border-bottom: 2px solid #6366f1 !important;
+}
+
+/* ── fix slider numbers cut off ── */
+.gradio-container .wrap.svelte-1e8tbe5 span,
+.gradio-container span.svelte-1e8tbe5 {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
+
 footer { display: none !important; }
 """
 
