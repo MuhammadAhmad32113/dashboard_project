@@ -1,12 +1,12 @@
 """
 app.py  —  AEP Energy Consumption Dashboard
+Course : Exploratory Data Analysis
 """
 
 import gradio as gr
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
-import os
 
 from filters import load_and_clean, apply_filters, compute_kpis
 from charts import (
@@ -16,6 +16,7 @@ from charts import (
 )
 
 DF = load_and_clean("data/AEP_hourly.csv")
+
 YEAR_MIN    = int(DF["Year"].min())
 YEAR_MAX    = int(DF["Year"].max())
 MW_MIN      = float(DF["AEP_MW"].min())
@@ -40,7 +41,7 @@ def update_dashboard(year_start, year_end, seasons, months_sel,
         keyword=keyword,
     )
     kpis   = compute_kpis(filtered)
-    rec_md = f"**{len(filtered):,}** of **{len(DF):,}** records"
+    rec_md = f"Showing **{len(filtered):,}** of **{len(DF):,}** records"
     return (
         _kpi_row(kpis),
         chart_pie(filtered), chart_histogram(filtered),
@@ -56,14 +57,16 @@ def update_dashboard(year_start, year_end, seasons, months_sel,
 def _kpi_card(label, value, border):
     return f"""
     <div style="flex:1;min-width:130px;
-                background:linear-gradient(135deg,#2a2a2a,#222);
-                border-top:3px solid {border};border-radius:10px;
-                padding:14px 16px;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+                background:linear-gradient(135deg,#2a2a2a,#222222);
+                border-top:3px solid {border};
+                border-radius:10px;padding:16px 18px;
+                box-shadow:0 4px 15px rgba(0,0,0,0.4);">
       <div style="font-size:10px;color:#9ca3af;font-weight:700;
                   letter-spacing:1px;text-transform:uppercase;
-                  margin-bottom:4px;">{label}</div>
-      <div style="font-size:15px;font-weight:700;color:#fff;">{value}</div>
+                  margin-bottom:6px;">{label}</div>
+      <div style="font-size:17px;font-weight:700;color:#ffffff;">{value}</div>
     </div>"""
+
 
 def _kpi_row(k):
     return f"""
@@ -79,140 +82,289 @@ def _kpi_row(k):
       {_kpi_card("Period",         k['years_covered'],  "#3b82f6")}
     </div>"""
 
+
 def reset_filters():
     return (
-        YEAR_MIN, YEAR_MAX, ALL_SEASONS,
+        YEAR_MIN, YEAR_MAX,
+        ALL_SEASONS,
         [MONTH_NAMES[m] for m in ALL_MONTHS],
-        MW_MIN, MW_MAX, ["Weekday", "Weekend"], "",
+        MW_MIN, MW_MAX,
+        ["Weekday", "Weekend"],
+        "",
     )
 
 
 CSS = """
-html, body, .gradio-container {
+/* ── global ── */
+*, body, .gradio-container {
     font-family: 'Segoe UI', system-ui, sans-serif !important;
-    background: #141414 !important;
-    color: #e5e7eb !important;
-    overflow-x: hidden !important;
+}
+body, .gradio-container {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
     max-width: 100% !important;
-    box-sizing: border-box !important;
+    width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    margin: 0 !important;
 }
-* { box-sizing: border-box !important; }
-.gr-row { flex-wrap: wrap !important; }
-.block { min-width: 0 !important; }
+.gradio-container > .main > .wrap {
+    max-width: 100% !important;
+    padding: 0 16px !important;
+}
 
+/* ── header ── */
 #dash-header {
-    background: linear-gradient(135deg,#1e1e1e,#111);
-    border: 1px solid #2e2e2e;
-    border-radius: 12px;
-    padding: 20px 26px;
+    background: linear-gradient(135deg, #1e1e1e 0%, #111111 100%);
+    border: 1px solid #333333;
+    border-radius: 14px;
+    padding: 28px 32px;
     margin-bottom: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-#dash-header h1 { margin:0; font-size:20px; font-weight:700; color:#fff; }
-#dash-header p  { margin:5px 0 0; color:#9ca3af; font-size:12px; }
+#dash-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+#dash-header p {
+    margin: 6px 0 0;
+    color: #9ca3af;
+    font-size: 13px;
+}
 
+/* ── filter accordion ── */
+.filter-panel > div:first-child {
+    background: #2a2a2a !important;
+    border-radius: 10px !important;
+    border: 1px solid #3a3a3a !important;
+}
+.filter-panel .label-wrap span {
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+/* ── remove all inner black boxes ── */
+.gradio-container .gr-box,
+.gradio-container .gr-form,
+.gradio-container .block,
+.gradio-container .form,
+div[data-testid="block"],
+.block.svelte-1f354aw,
+.block.svelte-90oupt,
+.wrap.svelte-1hnfib2,
+.gradio-container .wrap,
+.gradio-container fieldset,
+.gradio-container .label-wrap,
+.gradio-slider, .gr-slider,
+.gr-checkbox-group,
+.gr-form > div,
+.gradio-container > div > div > div > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+/* keep accordion panel itself dark */
 .filter-panel > div:first-child {
     background: #2a2a2a !important;
     border: 1px solid #3a3a3a !important;
     border-radius: 10px !important;
-    padding: 20px !important;
+    padding: 24px 32px !important;
+    width: 100% !important;
 }
-.filter-panel .label-wrap span {
-    color: #ffffff !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+.filter-panel {
+    width: 100% !important;
 }
 
+/* ── section titles inside filters ── */
 .section-title {
-    font-size: 11px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
-    color: #6b7280 !important;
+    color: #ffffff !important;
+    letter-spacing: 1.2px !important;
     text-transform: uppercase !important;
-    letter-spacing: 1px !important;
     margin: 0 0 8px 0 !important;
-    padding-bottom: 5px !important;
-    border-bottom: 1px solid #2e2e2e !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #3a3a3a !important;
 }
 
-.section-heading {
-    font-size: 13px;
-    font-weight: 700;
-    color: #ffffff;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 20px 0 10px;
-    padding-left: 10px;
-    border-left: 3px solid #3b82f6;
-}
-
-button[role="tab"], .tab-nav button {
+/* ── labels on all inputs ── */
+label span, .gr-checkbox-group label span,
+.gradio-container label {
+    color: #d1d5db !important;
     font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #9ca3af !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 10px 16px !important;
 }
-button[role="tab"]:hover, .tab-nav button:hover {
+
+/* ── sliders ── */
+input[type=range]::-webkit-slider-thumb { background: #3b82f6 !important; }
+input[type=range]::-webkit-slider-runnable-track { background: #374151 !important; }
+
+/* ── checkboxes ── */
+input[type=checkbox]:checked { accent-color: #3b82f6; }
+
+/* ── textbox ── */
+.gradio-container input[type=text],
+.gradio-container textarea {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+/* ── dropdown ── */
+.gradio-container .wrap {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+}
+.gradio-container .multiselect {
+    background: #2a2a2a !important;
+}
+.gradio-container .token {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+/* ── buttons ── */
+.btn-apply {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4) !important;
+}
+.btn-apply:hover {
+    background: #2563eb !important;
+}
+.btn-reset {
+    background: #2a2a2a !important;
+    color: #ffffff !important;
+    border: 1.5px solid #4b5563 !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+.btn-reset:hover {
+    background: #374151 !important;
+}
+
+/* ── KPI heading ── */
+#kpi-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin: 20px 0 8px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── VISUALIZATIONS heading ── */
+#viz-heading {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    margin: 24px 0 12px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── TABS ── */
+.gradio-tabitem,
+div[data-testid="tab"],
+.tabs > div > button,
+button[role="tab"],
+.tab-nav button {
+    font-size: 15px !important;
+    font-weight: 400 !important;
     color: #ffffff !important;
     background: #2a2a2a !important;
-    border-radius: 6px !important;
+    border: none !important;
+    padding: 12px 22px !important;
+    border-radius: 8px 8px 0 0 !important;
+    letter-spacing: 0.2px !important;
 }
-button[role="tab"][aria-selected="true"], .tab-nav button.selected {
-    color: #3b82f6 !important;
-    font-weight: 600 !important;
-    border-bottom: 2px solid #3b82f6 !important;
-    background: transparent !important;
+button[role="tab"]:hover,
+.tab-nav button:hover {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
 }
-
-.gradio-plot {
-    background: #1e1e1e !important;
-    border-radius: 10px !important;
-    border: 1px solid #2e2e2e !important;
-    padding: 12px !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3) !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-}
-.gradio-plot > .label-wrap { display: none !important; }
-.gradio-plot canvas, .gradio-plot img { max-width: 100% !important; }
-
-.gradio-container label span { color: #d1d5db !important; font-size: 12px !important; }
-.gradio-container input[type=text], .gradio-container textarea {
-    background: #2a2a2a !important; border: 1px solid #374151 !important;
-    color: #fff !important; border-radius: 7px !important;
-}
-.gradio-container .wrap { background: #2a2a2a !important; border-color: #374151 !important; }
-.gradio-container .token { background: #1d4ed8 !important; color: #fff !important; }
-input[type=checkbox]:checked { accent-color: #3b82f6; }
-input[type=range] { accent-color: #3b82f6; width: 100% !important; }
-input[type=number] {
-    background: #2a2a2a !important; border: 1px solid #374151 !important;
-    color: #fff !important; border-radius: 6px !important;
+button[role="tab"][aria-selected="true"],
+.tab-nav button.selected {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid #60a5fa !important;
+    font-weight: 500 !important;
 }
 
-.gradio-container .gr-box, .gradio-container .gr-form,
-div.block, .padded, .gap {
+/* ── chart cards ── */
+.gradio-plot, .gr-plot {
+    background: #242424 !important;
+    border-radius: 12px !important;
+    border: 1px solid #333333 !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+    margin: 4px !important;
+}
+
+/* ── hide chart floating labels ── */
+.gradio-plot > .label-wrap,
+.gr-plot > .label-wrap,
+.plot-container > .label-wrap {
+    display: none !important;
+}
+
+/* ── tabs container ── */
+.tabs {
+    background: #1a1a1a !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+}
+
+/* ── record count text ── */
+.gradio-markdown p { color: #9ca3af !important; font-size: 13px !important; }
+
+
+
+/* ── wider side columns padding ── */
+.filter-panel .gr-row > div:first-child,
+.filter-panel .gr-row > div:last-child {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+input[type=range] {
+    width: 100% !important;
+    min-width: 200px !important;
+}
+/* ── aggressive box removal for Gradio 4.x ── */
+.svelte-1f354aw, .svelte-90oupt, .svelte-1hnfib2,
+.svelte-1gfkn6u, .svelte-1ed2p3z,
+[class*="svelte-"] > .block,
+.prose, .gap,
+.padded,
+.container > .block > .block,
+div.block { 
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
-
-.btn-apply {
-    background: #1d4ed8 !important; color: #fff !important;
-    border: none !important; border-radius: 8px !important;
-    font-weight: 600 !important; font-size: 13px !important;
+input[type=number] {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
 }
-.btn-reset {
-    background: #2a2a2a !important; color: #d1d5db !important;
-    border: 1px solid #374151 !important; border-radius: 8px !important;
-    font-weight: 600 !important; font-size: 13px !important;
-}
-
-.gradio-markdown p { color: #6b7280 !important; font-size: 12px !important; }
+html, body { overflow-x: hidden !important; }
+.gradio-container { overflow-x: hidden !important; max-width: 100vw !important; }
 footer { display: none !important; }
 """
-
 
 with gr.Blocks(
     theme=gr.themes.Base(primary_hue="blue"),
@@ -220,6 +372,7 @@ with gr.Blocks(
     title="AEP Energy Dashboard"
 ) as demo:
 
+    # HEADER
     gr.HTML("""
     <div id="dash-header">
       <h1>AEP Hourly Energy Consumption &mdash; Analytics Dashboard</h1>
@@ -229,44 +382,56 @@ with gr.Blocks(
          Exploratory Data Analysis</p>
     </div>""")
 
+    # FILTERS
     with gr.Accordion("Filters & Controls", open=True,
                       elem_classes=["filter-panel"]):
-        with gr.Row():
-            with gr.Column(min_width=200):
+        with gr.Row(equal_height=True):
+            with gr.Column(min_width=280):
                 gr.HTML('<div class="section-title">Date Range</div>')
-                year_start = gr.Slider(YEAR_MIN, YEAR_MAX, value=YEAR_MIN, step=1, label="Start Year")
-                year_end   = gr.Slider(YEAR_MIN, YEAR_MAX, value=YEAR_MAX, step=1, label="End Year")
+                year_start = gr.Slider(YEAR_MIN, YEAR_MAX, value=YEAR_MIN,
+                                       step=1, label="Start Year")
+                year_end   = gr.Slider(YEAR_MIN, YEAR_MAX, value=YEAR_MAX,
+                                       step=1, label="End Year")
 
             with gr.Column(min_width=200):
                 gr.HTML('<div class="section-title">Category Filters</div>')
-                seasons_cb  = gr.CheckboxGroup(ALL_SEASONS, value=ALL_SEASONS, label="Season")
-                day_type_cb = gr.CheckboxGroup(["Weekday","Weekend"], value=["Weekday","Weekend"], label="Day Type")
+                seasons_cb  = gr.CheckboxGroup(ALL_SEASONS, value=ALL_SEASONS,
+                                               label="Season")
+                day_type_cb = gr.CheckboxGroup(["Weekday","Weekend"],
+                                               value=["Weekday","Weekend"],
+                                               label="Day Type")
 
             with gr.Column(min_width=200):
                 gr.HTML('<div class="section-title">Month Selection</div>')
                 months_ms = gr.Dropdown(
                     choices=[MONTH_NAMES[m] for m in ALL_MONTHS],
                     value=[MONTH_NAMES[m] for m in ALL_MONTHS],
-                    multiselect=True, label="Months")
+                    multiselect=True, label="Months (multi-select)")
 
-            with gr.Column(min_width=200):
+            with gr.Column(min_width=280):
                 gr.HTML('<div class="section-title">Load Range (MW)</div>')
-                mw_low  = gr.Slider(MW_MIN, MW_MAX, value=MW_MIN, step=100, label="Min MW")
-                mw_high = gr.Slider(MW_MIN, MW_MAX, value=MW_MAX, step=100, label="Max MW")
+                mw_low  = gr.Slider(MW_MIN, MW_MAX, value=MW_MIN,
+                                    step=100, label="Min MW")
+                mw_high = gr.Slider(MW_MIN, MW_MAX, value=MW_MAX,
+                                    step=100, label="Max MW")
 
         with gr.Row():
-            keyword_box = gr.Textbox(placeholder="e.g. 2010-07 or 2015",
-                                     label="Text Search", scale=4)
+            keyword_box = gr.Textbox(
+                placeholder="e.g.  2010-07   or   2015",
+                label="Text Search (keyword in date)",
+                scale=4)
             apply_btn = gr.Button("Apply Filters", variant="primary",
                                   elem_classes=["btn-apply"], scale=1)
             reset_btn = gr.Button("Reset All", variant="secondary",
                                   elem_classes=["btn-reset"], scale=1)
 
-    gr.HTML('<div class="section-heading">Key Performance Indicators</div>')
+    # KPI
+    gr.HTML('<div id="kpi-heading">Key Performance Indicators</div>')
     kpi_display  = gr.HTML()
     record_count = gr.Markdown()
 
-    gr.HTML('<div class="section-heading">Visualizations</div>')
+    # CHARTS
+    gr.HTML('<div id="viz-heading">Visualizations</div>')
 
     with gr.Tabs():
         with gr.Tab("Distribution & Composition"):
@@ -309,9 +474,6 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 10000))
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=port,
-        share=False
-    )
+    demo.launch(server_name="0.0.0.0", server_port=port, share=False)
