@@ -57,20 +57,14 @@ def update_dashboard(year_start, year_end, seasons, months_sel,
 def _kpi_card(label, value, border):
     return f"""
     <div style="flex:1;min-width:130px;
-                background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
-                border:1px solid rgba(255,255,255,0.08);
-                border-top:2px solid {border};
-                border-radius:16px;padding:18px 20px;
-                box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06);
-                transition:all 0.2s;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;
-                  background:radial-gradient(circle,{border}22 0%,transparent 70%);
-                  border-radius:50%;pointer-events:none;"></div>
-      <div style="font-size:10px;color:#818cf8;font-weight:700;
-                  letter-spacing:1.2px;text-transform:uppercase;
-                  margin-bottom:10px;position:relative;">{label}</div>
-      <div style="font-size:16px;font-weight:700;color:#f1f5f9;
-                  position:relative;letter-spacing:-0.3px;">{value}</div>
+                background:linear-gradient(135deg,#2a2a2a,#222222);
+                border-top:3px solid {border};
+                border-radius:10px;padding:16px 18px;
+                box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+      <div style="font-size:10px;color:#9ca3af;font-weight:700;
+                  letter-spacing:1px;text-transform:uppercase;
+                  margin-bottom:6px;">{label}</div>
+      <div style="font-size:17px;font-weight:700;color:#ffffff;">{value}</div>
     </div>"""
 
 
@@ -101,218 +95,310 @@ def reset_filters():
 
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-*, html, body, .gradio-container {
-    font-family: 'Inter', 'Segoe UI', sans-serif !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
+/* ── global ── */
+*, body, .gradio-container {
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
 }
-*:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
-
 body, .gradio-container {
-    background: #0d0d18 !important;
-    background-image:
-        radial-gradient(ellipse at 10% 10%, rgba(99,102,241,0.15) 0%, transparent 40%),
-        radial-gradient(ellipse at 90% 90%, rgba(139,92,246,0.12) 0%, transparent 40%),
-        radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 50%) !important;
-    color: #e2e8f0 !important;
+    background: #1a1a1a !important;
+    color: #ffffff !important;
     max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
     margin: 0 !important;
-    padding: 0 !important;
 }
 .gradio-container > .main > .wrap {
     max-width: 100% !important;
-    padding: 0 20px !important;
+    padding: 0 16px !important;
 }
 
-/* ══ HEADER ══ */
+/* ── header ── */
 #dash-header {
-    background: linear-gradient(135deg,
-        rgba(79,70,229,0.2) 0%,
-        rgba(13,13,24,0.98) 45%,
-        rgba(124,58,237,0.15) 100%) !important;
-    border: 1px solid rgba(99,102,241,0.3) !important;
-    border-radius: 20px !important;
-    padding: 28px 36px !important;
-    margin-bottom: 20px !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-shadow:
-        0 0 80px rgba(99,102,241,0.1),
-        0 20px 60px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.08) !important;
-}
-#dash-header::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -80px !important; right: -80px !important;
-    width: 320px !important; height: 320px !important;
-    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 65%) !important;
-    border-radius: 50% !important;
-    pointer-events: none !important;
-}
-#dash-header::after {
-    content: '' !important;
-    position: absolute !important;
-    bottom: -60px !important; left: 30% !important;
-    width: 200px !important; height: 200px !important;
-    background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%) !important;
-    border-radius: 50% !important;
-    pointer-events: none !important;
+    background: linear-gradient(135deg, #1e1e1e 0%, #111111 100%);
+    border: 1px solid #333333;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 #dash-header h1 {
-    margin: 0 !important;
-    font-size: 24px !important;
-    font-weight: 700 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 60%, #a5b4fc 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    position: relative !important;
-    z-index: 1 !important;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
 }
 #dash-header p {
-    margin: 8px 0 0 !important;
-    color: #94a3b8 !important;
-    font-size: 13px !important;
-    position: relative !important;
-    z-index: 1 !important;
+    margin: 6px 0 0;
+    color: #9ca3af;
+    font-size: 13px;
 }
 
-/* ══ FILTER PANEL ══ */
+/* ── filter accordion ── */
 .filter-panel > div:first-child {
-    background: linear-gradient(135deg,
-        rgba(255,255,255,0.04) 0%,
-        rgba(255,255,255,0.02) 100%) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 20px !important;
-    padding: 24px 28px !important;
-    box-shadow:
-        0 8px 32px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.06) !important;
+    background: #2a2a2a !important;
+    border-radius: 10px !important;
+    border: 1px solid #3a3a3a !important;
 }
 .filter-panel .label-wrap span {
-    color: #e2e8f0 !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
 }
 
-/* ── section titles ── */
-.section-title {
-    font-weight: 700 !important;
-    color: #818cf8 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1.5px !important;
-    margin: 0 0 12px 0 !important;
-    padding-bottom: 8px !important;
-    border-bottom: 1px solid rgba(99,102,241,0.2) !important;
-}
-
-/* ══ REMOVE BLACK BOXES ══ */
-.gradio-container .block, .gradio-container .gr-box,
-.gradio-container .gr-form, .gradio-container fieldset,
-div.block, .padded, .gap,
-.svelte-1f354aw, .svelte-90oupt, .svelte-1hnfib2,
-.svelte-1gfkn6u, [class*="svelte-"] > .block,
+/* ── remove all inner black boxes ── */
+.gradio-container .gr-box,
+.gradio-container .gr-form,
+.gradio-container .block,
+.gradio-container .form,
+div[data-testid="block"],
+.block.svelte-1f354aw,
+.block.svelte-90oupt,
+.wrap.svelte-1hnfib2,
+.gradio-container .wrap,
+.gradio-container fieldset,
 .gradio-container .label-wrap,
+.gradio-slider, .gr-slider,
+.gr-checkbox-group,
+.gr-form > div,
 .gradio-container > div > div > div > div {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
 }
+/* keep accordion panel itself dark */
 .filter-panel > div:first-child {
-    background: linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02)) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 20px !important;
-    padding: 24px 28px !important;
-}
-
-/* ══ INPUTS ══ */
-.gradio-container label span { color: #cbd5e1 !important; font-weight: 500 !important; }
-.gradio-container input[type=text], .gradio-container textarea {
-    background: rgba(255,255,255,0.05) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #e2e8f0 !important;
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
     border-radius: 10px !important;
+    padding: 24px 32px !important;
+    width: 100% !important;
 }
-input[type=number] {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #e2e8f0 !important;
-    border-radius: 8px !important;
-    min-width: 70px !important;
-}
-input[type=range] { accent-color: #6366f1 !important; width: 100% !important; }
-input[type=checkbox]:checked { accent-color: #6366f1 !important; }
-.gradio-container .wrap { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 10px !important; }
-.gradio-container .multiselect { background: rgba(255,255,255,0.05) !important; }
-.gradio-container .token { background: linear-gradient(135deg,#4f46e5,#7c3aed) !important; color: #fff !important; border-radius: 6px !important; }
-
-/* ══ BUTTONS ══ */
-.btn-apply {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-    color: #fff !important; border: none !important;
-    border-radius: 12px !important; font-weight: 600 !important;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.5) !important;
-}
-.btn-apply:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.7) !important; transform: translateY(-1px) !important; }
-.btn-reset {
-    background: rgba(255,255,255,0.05) !important;
-    color: #94a3b8 !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 12px !important; font-weight: 600 !important;
+.filter-panel {
+    width: 100% !important;
 }
 
-/* ══ HEADINGS ══ */
-#kpi-heading, #viz-heading {
+/* ── section titles inside filters ── */
+.section-title {
+    font-size: 14px !important;
     font-weight: 700 !important;
-    color: #818cf8 !important;
-    letter-spacing: 1.5px !important;
+    color: #ffffff !important;
+    letter-spacing: 1.2px !important;
     text-transform: uppercase !important;
-    margin: 24px 0 14px !important;
-    padding-left: 14px !important;
-    border-left: 3px solid #6366f1 !important;
-    position: relative !important;
+    margin: 0 0 8px 0 !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #3a3a3a !important;
 }
 
-/* ══ TABS ══ */
-.tabs { background: transparent !important; border-bottom: 1px solid rgba(255,255,255,0.07) !important; margin-bottom: 16px !important; }
-button[role="tab"], .tab-nav button {
-    font-weight: 500 !important;
-    color: #64748b !important;
-    background: transparent !important;
+/* ── labels on all inputs ── */
+label span, .gr-checkbox-group label span,
+.gradio-container label {
+    color: #d1d5db !important;
+    font-size: 13px !important;
+}
+
+/* ── sliders ── */
+input[type=range]::-webkit-slider-thumb { background: #3b82f6 !important; }
+input[type=range]::-webkit-slider-runnable-track { background: #374151 !important; }
+
+/* ── checkboxes ── */
+input[type=checkbox]:checked { accent-color: #3b82f6; }
+
+/* ── textbox ── */
+.gradio-container input[type=text],
+.gradio-container textarea {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+/* ── dropdown ── */
+.gradio-container .wrap {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+}
+.gradio-container .multiselect {
+    background: #2a2a2a !important;
+}
+.gradio-container .token {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+/* ── buttons ── */
+.btn-apply {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4) !important;
+}
+.btn-apply:hover {
+    background: #2563eb !important;
+}
+.btn-reset {
+    background: #2a2a2a !important;
+    color: #ffffff !important;
+    border: 1.5px solid #4b5563 !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+.btn-reset:hover {
+    background: #374151 !important;
+}
+
+/* ── KPI heading ── */
+#kpi-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin: 20px 0 8px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── VISUALIZATIONS heading ── */
+#viz-heading {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    margin: 24px 0 12px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── TABS ── */
+.gradio-tabitem,
+div[data-testid="tab"],
+.tabs > div > button,
+button[role="tab"],
+.tab-nav button {
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    color: #ffffff !important;
+    background: #2a2a2a !important;
     border: none !important;
     padding: 12px 22px !important;
-    outline: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    letter-spacing: 0.2px !important;
 }
-button[role="tab"] svg, button[role="tab"]::after,
-.tab-nav button svg, .tab-nav button::after { display: none !important; }
-button[role="tab"]:hover, .tab-nav button:hover { color: #a5b4fc !important; background: rgba(99,102,241,0.08) !important; border-radius: 8px 8px 0 0 !important; }
-button[role="tab"][aria-selected="true"], .tab-nav button.selected { color: #a5b4fc !important; font-weight: 600 !important; border-bottom: 2px solid #6366f1 !important; }
+button[role="tab"]:hover,
+.tab-nav button:hover {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+button[role="tab"][aria-selected="true"],
+.tab-nav button.selected {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid #60a5fa !important;
+    font-weight: 500 !important;
+}
 
-/* ══ CHART CARDS ══ */
+/* ── chart cards ── */
 .gradio-plot, .gr-plot {
-    background: linear-gradient(135deg,
-        rgba(255,255,255,0.04) 0%,
-        rgba(255,255,255,0.02) 100%) !important;
-    border-radius: 20px !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    padding: 20px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    transition: border 0.3s, box-shadow 0.3s, transform 0.2s !important;
+    background: #242424 !important;
+    border-radius: 12px !important;
+    border: 1px solid #333333 !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+    margin: 4px !important;
 }
-.gradio-plot:hover, .gr-plot:hover {
-    border: 1px solid rgba(99,102,241,0.3) !important;
-    box-shadow: 0 16px 48px rgba(99,102,241,0.15) !important;
-    transform: translateY(-2px) !important;
-}
-.gradio-plot > .label-wrap, .gr-plot > .label-wrap,
-.gradio-plot button, .gr-plot button,
-.gradio-plot .icon-buttons, .gradio-plot .top-panel { display: none !important; }
 
-.gradio-markdown p { color: #64748b !important; }
+/* ── hide chart floating labels ── */
+.gradio-plot > .label-wrap,
+.gr-plot > .label-wrap,
+.plot-container > .label-wrap {
+    display: none !important;
+}
+
+/* ── tabs container ── */
+.tabs {
+    background: #1a1a1a !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+}
+
+/* ── record count text ── */
+.gradio-markdown p { color: #9ca3af !important; font-size: 13px !important; }
+
+
+
+/* ── wider side columns padding ── */
+.filter-panel .gr-row > div:first-child,
+.filter-panel .gr-row > div:last-child {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+input[type=range] {
+    width: 100% !important;
+    min-width: 200px !important;
+}
+/* ── aggressive box removal for Gradio 4.x ── */
+.svelte-1f354aw, .svelte-90oupt, .svelte-1hnfib2,
+.svelte-1gfkn6u, .svelte-1ed2p3z,
+[class*="svelte-"] > .block,
+.prose, .gap,
+.padded,
+.container > .block > .block,
+div.block { 
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+input[type=number] {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+}
+
+/* ── hide plot icons/labels completely ── */
+.gradio-plot .label-wrap,
+.gradio-plot .icon-buttons,
+.gradio-plot .download-div,
+.gradio-plot button,
+.gr-plot .label-wrap,
+.gr-plot button,
+.plot-container .label-wrap,
+.svelte-1cl284s,
+.top-panel { display: none !important; }
+
+/* ── tab text bigger force ── */
+.tab-nav { gap: 4px !important; }
+.tab-nav button,
+[role="tablist"] button,
+[role="tab"] {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.2px !important;
+}
+[role="tab"][aria-selected="true"] {
+    color: #a5b4fc !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    border-bottom: 2px solid #6366f1 !important;
+}
+
+/* ── fix slider numbers cut off ── */
+.gradio-container .wrap.svelte-1e8tbe5 span,
+.gradio-container span.svelte-1e8tbe5 {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
+
 footer { display: none !important; }
 """
 
