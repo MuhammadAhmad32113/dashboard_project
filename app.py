@@ -361,32 +361,43 @@ input[type=number] {
     color: #ffffff !important;
     border-radius: 6px !important;
 }
-/* ── remove black boxes ── */
-.gradio-container .block,
-.gradio-container .form,
-.gradio-container fieldset,
-div.block,
-.svelte-1f354aw,
-.svelte-90oupt,
-.svelte-1hnfib2,
-.padded,
-.gap {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+
+/* ── hide plot icons/labels completely ── */
+.gradio-plot .label-wrap,
+.gradio-plot .icon-buttons,
+.gradio-plot .download-div,
+.gradio-plot button,
+.gr-plot .label-wrap,
+.gr-plot button,
+.plot-container .label-wrap,
+.svelte-1cl284s,
+.top-panel { display: none !important; }
+
+/* ── tab text bigger force ── */
+.tab-nav { gap: 4px !important; }
+.tab-nav button,
+[role="tablist"] button,
+[role="tab"] {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.2px !important;
+}
+[role="tab"][aria-selected="true"] {
+    color: #a5b4fc !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    border-bottom: 2px solid #6366f1 !important;
 }
 
-/* ── bigger text everywhere ── */
-.gradio-container label span { font-size: 15px !important; color: #d1d5db !important; }
-.gradio-container input[type=range] { width: 100% !important; }
-input[type=number] { font-size: 14px !important; background: #2a2a2a !important; border: 1px solid #3a3a3a !important; color: #fff !important; border-radius: 6px !important; }
-.gr-checkbox-group label { font-size: 15px !important; }
-.gradio-container .multiselect span { font-size: 14px !important; }
-.gradio-markdown p { font-size: 14px !important; }
-
-/* ── fix horizontal scroll ── */
-html, body { overflow-x: hidden !important; }
-.gradio-container { overflow-x: hidden !important; max-width: 100vw !important; }
+/* ── fix slider numbers cut off ── */
+.gradio-container .wrap.svelte-1e8tbe5 span,
+.gradio-container span.svelte-1e8tbe5 {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
 
 footer { display: none !important; }
 """
