@@ -15,11 +15,11 @@ from matplotlib.ticker import FuncFormatter
 # ─────────────────────────────────────────────
 #  SAME PALETTE — unchanged
 # ─────────────────────────────────────────────
-BG        = "#1e1e1e"
-CARD_BG   = "#252525"
-GRID      = "#2e2e2e"
-TEXT      = "#e5e7eb"
-TEXT_SUB  = "#9ca3af"
+BG        = "#0d1c2d"
+CARD_BG   = "#122131"
+GRID      = "#1c2b3c"
+TEXT      = "#d4e4fa"
+TEXT_SUB  = "#8899aa"
 
 BLUE    = "#3b82f6"
 EMERALD = "#10b981"
