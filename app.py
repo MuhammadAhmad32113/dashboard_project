@@ -56,22 +56,15 @@ def update_dashboard(year_start, year_end, seasons, months_sel,
 
 def _kpi_card(label, value, border):
     return f"""
-    <div style="flex:1;min-width:120px;
-                background:rgba(18,33,49,0.7);
-                backdrop-filter:blur(20px);
-                border:1px solid rgba(255,255,255,0.08);
-                border-top:2px solid {border};
-                border-radius:16px;padding:16px 18px;
-                box-shadow:0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
-                position:relative;overflow:hidden;transition:all 0.2s;">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;
-                  background:radial-gradient(circle,{border}22 0%,transparent 70%);
-                  border-radius:50%;pointer-events:none;"></div>
-      <div style="font-family:JetBrains Mono,monospace;font-size:10px;color:#958da1;
-                  font-weight:600;letter-spacing:0.05em;text-transform:uppercase;
-                  margin-bottom:8px;">{label}</div>
-      <div style="font-size:15px;font-weight:700;color:#d4e4fa;
-                  white-space:nowrap;letter-spacing:-0.3px;">{value}</div>
+    <div style="flex:1;min-width:130px;
+                background:linear-gradient(135deg,#2a2a2a,#222222);
+                border-top:3px solid {border};
+                border-radius:10px;padding:16px 18px;
+                box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+      <div style="font-size:10px;color:#9ca3af;font-weight:700;
+                  letter-spacing:1px;text-transform:uppercase;
+                  margin-bottom:6px;">{label}</div>
+      <div style="font-size:17px;font-weight:700;color:#ffffff;">{value}</div>
     </div>"""
 
 
@@ -102,278 +95,350 @@ def reset_filters():
 
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@600&display=swap');
-
-*, html, body, .gradio-container {
-    font-family: "Inter", "Segoe UI", sans-serif !important;
-    box-sizing: border-box !important;
+/* ── global ── */
+*, body, .gradio-container {
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
 }
-*:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
-html, body { overflow-x: hidden !important; width: 100% !important; }
-
 body, .gradio-container {
-    background: #051424 !important;
-    background-image:
-        radial-gradient(ellipse at 10% 0%, rgba(124,58,237,0.2) 0%, transparent 40%),
-        radial-gradient(ellipse at 90% 100%, rgba(99,102,241,0.12) 0%, transparent 40%) !important;
-    color: #d4e4fa !important;
+    background: #1a1a1a !important;
+    color: #ffffff !important;
     max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
     margin: 0 !important;
-    padding: 0 !important;
-    overflow-x: hidden !important;
 }
 .gradio-container > .main > .wrap {
     max-width: 100% !important;
-    padding: 0 20px !important;
+    padding: 0 16px !important;
 }
 
-/* ══ HEADER ══ */
+/* ── header ── */
 #dash-header {
-    background: linear-gradient(135deg,
-        rgba(124,58,237,0.2) 0%,
-        rgba(5,20,36,0.97) 50%,
-        rgba(99,102,241,0.12) 100%) !important;
-    border: 1px solid rgba(210,187,255,0.2) !important;
-    border-radius: 20px !important;
-    padding: 28px 36px !important;
-    margin-bottom: 20px !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-shadow: 0 0 80px rgba(124,58,237,0.12), 0 20px 60px rgba(0,0,0,0.5),
-                inset 0 1px 0 rgba(255,255,255,0.07) !important;
-}
-#dash-header::before {
-    content: "" !important;
-    position: absolute !important;
-    top: -80px !important; right: -60px !important;
-    width: 280px !important; height: 280px !important;
-    background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 65%) !important;
-    border-radius: 50% !important; pointer-events: none !important;
+    background: linear-gradient(135deg, #1e1e1e 0%, #111111 100%);
+    border: 1px solid #333333;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 #dash-header h1 {
-    margin: 0 !important;
-    font-size: 24px !important;
-    font-weight: 700 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #d2bbff 60%, #a5b4fc 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
 }
 #dash-header p {
-    margin: 8px 0 0 !important;
-    color: #94a3b8 !important;
-    font-size: 13px !important;
+    margin: 6px 0 0;
+    color: #9ca3af;
+    font-size: 13px;
 }
 
-/* ══ FILTER PANEL OUTER ══ */
+/* ── filter accordion ── */
 .filter-panel > div:first-child {
-    background: rgba(30,30,46,0.5) !important;
-    backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 20px !important;
-    padding: 24px 24px !important;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.4),
-                inset 0 1px 0 rgba(255,255,255,0.05) !important;
-    width: 100% !important;
+    background: #2a2a2a !important;
+    border-radius: 10px !important;
+    border: 1px solid #3a3a3a !important;
 }
 .filter-panel .label-wrap span {
-    color: #d4e4fa !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
 }
 
-/* ── SECTION TITLES — JetBrains Mono style ── */
-.section-title {
-    font-family: "JetBrains Mono", monospace !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: #d2bbff !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    margin: 0 0 14px 0 !important;
-    padding-bottom: 8px !important;
-    border-bottom: 1px solid rgba(210,187,255,0.15) !important;
-}
-
-/* ══ GLASS TILES per column ══ */
-.gradio-container .gr-row > div,
+/* ── remove all inner black boxes ── */
+.gradio-container .gr-box,
 .gradio-container .gr-form,
-.gradio-container .block { background: transparent !important; border: none !important; box-shadow: none !important; }
-
-/* Make each filter column look like a glass tile */
-.filter-panel .gr-row > div > div,
-.filter-panel [class*="column"] > div {
-    background: rgba(30,30,46,0.6) !important;
-    backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 16px !important;
-    padding: 16px !important;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3) !important;
-}
-
-/* ══ SLIDERS ══ */
-input[type=range] {
-    -webkit-appearance: none !important;
-    width: 100% !important;
-    height: 4px !important;
-    background: rgba(255,255,255,0.1) !important;
-    border-radius: 2px !important;
-    outline: none !important;
-    accent-color: #7c3aed !important;
-}
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none !important;
-    height: 18px !important;
-    width: 18px !important;
-    border-radius: 50% !important;
-    background: #ffffff !important;
-    cursor: pointer !important;
-    box-shadow: 0 0 10px rgba(210,187,255,0.5) !important;
-}
-input[type=range]::-webkit-slider-runnable-track {
-    height: 4px !important;
-    background: rgba(255,255,255,0.1) !important;
-    border-radius: 2px !important;
-}
-input[type=number] {
-    background: #122131 !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #d2bbff !important;
-    border-radius: 6px !important;
-    min-width: 72px !important;
-    font-size: 13px !important;
-    padding: 4px 8px !important;
-    font-family: "JetBrains Mono", monospace !important;
-}
-
-/* ══ CHECKBOXES ══ */
-input[type=checkbox] { accent-color: #7c3aed !important; }
-input[type=checkbox]:checked { accent-color: #7c3aed !important; }
-.gradio-container label span { color: #ccc3d8 !important; font-weight: 500 !important; }
-
-/* ══ MULTI-SELECT ══ */
+.gradio-container .block,
+.gradio-container .form,
+div[data-testid="block"],
+.block.svelte-1f354aw,
+.block.svelte-90oupt,
+.wrap.svelte-1hnfib2,
 .gradio-container .wrap,
-.gradio-container .multiselect {
-    background: rgba(5,20,36,0.5) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+.gradio-container fieldset,
+.gradio-container .label-wrap,
+.gradio-slider, .gr-slider,
+.gr-checkbox-group,
+.gr-form > div,
+.gradio-container > div > div > div > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+/* keep accordion panel itself dark */
+.filter-panel > div:first-child {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
     border-radius: 10px !important;
+    padding: 24px 32px !important;
+    width: 100% !important;
+}
+.filter-panel {
+    width: 100% !important;
+}
+
+/* ── section titles inside filters ── */
+.section-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 1.2px !important;
+    text-transform: uppercase !important;
+    margin: 0 0 8px 0 !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #3a3a3a !important;
+}
+
+/* ── labels on all inputs ── */
+label span, .gr-checkbox-group label span,
+.gradio-container label {
+    color: #d1d5db !important;
+    font-size: 13px !important;
+}
+
+/* ── sliders ── */
+input[type=range]::-webkit-slider-thumb { background: #3b82f6 !important; }
+input[type=range]::-webkit-slider-runnable-track { background: #374151 !important; }
+
+/* ── checkboxes ── */
+input[type=checkbox]:checked { accent-color: #3b82f6; }
+
+/* ── textbox ── */
+.gradio-container input[type=text],
+.gradio-container textarea {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+/* ── dropdown ── */
+.gradio-container .wrap {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+}
+.gradio-container .multiselect {
+    background: #2a2a2a !important;
 }
 .gradio-container .token {
-    background: #7c3aed !important;
-    color: #ede0ff !important;
-    border-radius: 6px !important;
-    font-size: 12px !important;
-    font-family: "JetBrains Mono", monospace !important;
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
 }
 
-/* ══ TEXT INPUT ══ */
-.gradio-container input[type=text], .gradio-container textarea {
-    background: rgba(1,15,31,0.5) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #d4e4fa !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
-}
-.gradio-container input[type=text]:focus {
-    border-color: rgba(210,187,255,0.4) !important;
-}
-
-/* ══ BUTTONS ══ */
+/* ── buttons ── */
 .btn-apply {
-    background: #7c3aed !important;
-    color: #ede0ff !important;
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
     border: none !important;
-    border-radius: 14px !important;
+    border-radius: 8px !important;
     font-weight: 700 !important;
     font-size: 14px !important;
-    box-shadow: 0 0 20px rgba(124,58,237,0.4), 0 4px 15px rgba(0,0,0,0.3) !important;
-    letter-spacing: 0.3px !important;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4) !important;
 }
 .btn-apply:hover {
-    background: #6d28d9 !important;
-    box-shadow: 0 0 30px rgba(124,58,237,0.6) !important;
+    background: #2563eb !important;
 }
 .btn-reset {
-    background: rgba(255,255,255,0.04) !important;
-    color: #958da1 !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 14px !important;
-    font-weight: 600 !important;
-    font-size: 12px !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase !important;
-}
-.btn-reset:hover { background: rgba(255,255,255,0.08) !important; color: #d4e4fa !important; }
-
-/* ══ KPI + VIZ HEADINGS ══ */
-#kpi-heading, #viz-heading {
-    font-family: "JetBrains Mono", monospace !important;
-    font-weight: 600 !important;
-    color: #d2bbff !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase !important;
-    font-size: 11px !important;
-    margin: 24px 0 14px !important;
-    padding-left: 14px !important;
-    border-left: 3px solid #7c3aed !important;
-}
-
-/* ══ TABS ══ */
-.tabs {
-    background: transparent !important;
-    border-bottom: 1px solid rgba(255,255,255,0.07) !important;
-    margin-bottom: 16px !important;
-    overflow-x: hidden !important;
-}
-button[role="tab"], .tab-nav button {
-    font-weight: 500 !important;
-    color: #4a4455 !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 12px 20px !important;
-    white-space: nowrap !important;
-    outline: none !important;
+    background: #2a2a2a !important;
+    color: #ffffff !important;
+    border: 1.5px solid #4b5563 !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
     font-size: 14px !important;
 }
-button[role="tab"] svg, button[role="tab"]::after,
-.tab-nav button svg { display: none !important; }
-button[role="tab"]:hover, .tab-nav button:hover {
-    color: #d2bbff !important;
-    background: rgba(124,58,237,0.08) !important;
+.btn-reset:hover {
+    background: #374151 !important;
+}
+
+/* ── KPI heading ── */
+#kpi-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin: 20px 0 8px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── VISUALIZATIONS heading ── */
+#viz-heading {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: .5px;
+    margin: 24px 0 12px !important;
+    padding-left: 4px;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ── TABS ── */
+.gradio-tabitem,
+div[data-testid="tab"],
+.tabs > div > button,
+button[role="tab"],
+.tab-nav button {
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    color: #ffffff !important;
+    background: #2a2a2a !important;
+    border: none !important;
+    padding: 12px 22px !important;
     border-radius: 8px 8px 0 0 !important;
+    letter-spacing: 0.2px !important;
 }
-button[role="tab"][aria-selected="true"], .tab-nav button.selected {
-    color: #d2bbff !important;
-    font-weight: 600 !important;
-    border-bottom: 2px solid #7c3aed !important;
+button[role="tab"]:hover,
+.tab-nav button:hover {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+button[role="tab"][aria-selected="true"],
+.tab-nav button.selected {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid #60a5fa !important;
+    font-weight: 500 !important;
 }
 
-/* ══ CHART CARDS ══ */
+/* ── chart cards ── */
 .gradio-plot, .gr-plot {
-    background: rgba(18,33,49,0.7) !important;
-    backdrop-filter: blur(20px) !important;
-    border-radius: 20px !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    padding: 20px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4),
-                inset 0 1px 0 rgba(255,255,255,0.05) !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    transition: border 0.3s, box-shadow 0.3s, transform 0.2s !important;
+    background: #242424 !important;
+    border-radius: 12px !important;
+    border: 1px solid #333333 !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+    margin: 4px !important;
 }
-.gradio-plot:hover, .gr-plot:hover {
-    border: 1px solid rgba(124,58,237,0.35) !important;
-    box-shadow: 0 16px 48px rgba(124,58,237,0.15) !important;
-    transform: translateY(-2px) !important;
+
+/* ── hide chart floating labels ── */
+.gradio-plot > .label-wrap,
+.gr-plot > .label-wrap,
+.plot-container > .label-wrap {
+    display: none !important;
 }
-.gradio-plot > .label-wrap, .gr-plot > .label-wrap,
-.gradio-plot .icon-buttons, .gradio-plot button,
-.gradio-plot svg.icon { display: none !important; }
 
-/* ══ OVERFLOW FIX ══ */
-.gradio-container .gr-row,
-.gradio-container > div { max-width: 100% !important; overflow-x: hidden !important; }
+/* ── tabs container ── */
+.tabs {
+    background: #1a1a1a !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+}
 
-.gradio-markdown p { color: #4a4455 !important; }
+/* ── record count text ── */
+.gradio-markdown p { color: #9ca3af !important; font-size: 13px !important; }
+
+
+
+/* ── wider side columns padding ── */
+.filter-panel .gr-row > div:first-child,
+.filter-panel .gr-row > div:last-child {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+input[type=range] {
+    width: 100% !important;
+    min-width: 200px !important;
+}
+/* ── aggressive box removal for Gradio 4.x ── */
+.svelte-1f354aw, .svelte-90oupt, .svelte-1hnfib2,
+.svelte-1gfkn6u, .svelte-1ed2p3z,
+[class*="svelte-"] > .block,
+.prose, .gap,
+.padded,
+.container > .block > .block,
+div.block { 
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+input[type=number] {
+    background: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+}
+
+/* ── hide plot icons/labels completely ── */
+.gradio-plot .label-wrap,
+.gradio-plot .icon-buttons,
+.gradio-plot .download-div,
+.gradio-plot button,
+.gr-plot .label-wrap,
+.gr-plot button,
+.plot-container .label-wrap,
+.svelte-1cl284s,
+.top-panel { display: none !important; }
+
+/* ── tab text bigger force ── */
+.tab-nav { gap: 4px !important; }
+.tab-nav button,
+[role="tablist"] button,
+[role="tab"] {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.2px !important;
+}
+[role="tab"][aria-selected="true"] {
+    color: #a5b4fc !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    border-bottom: 2px solid #6366f1 !important;
+}
+
+/* ── fix slider numbers cut off ── */
+.gradio-container .wrap.svelte-1e8tbe5 span,
+.gradio-container span.svelte-1e8tbe5 {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
+
+
+/* ── remove inner dark boxes inside filter tiles ── */
+.filter-panel .gr-row > div > div > div,
+.filter-panel .block > div,
+.filter-panel .form,
+.filter-panel fieldset,
+.filter-panel .gap,
+.filter-panel .padded,
+.filter-panel div.block,
+.filter-panel .svelte-1f354aw,
+.filter-panel .svelte-90oupt,
+.filter-panel .svelte-1hnfib2 {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* ── bigger section headings ── */
+#kpi-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    color: #d2bbff !important;
+    margin: 28px 0 16px !important;
+    padding-left: 14px !important;
+    border-left: 4px solid #7c3aed !important;
+}
+#viz-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    color: #d2bbff !important;
+    margin: 28px 0 16px !important;
+    padding-left: 14px !important;
+    border-left: 4px solid #7c3aed !important;
+}
+
 footer { display: none !important; }
 """
 
