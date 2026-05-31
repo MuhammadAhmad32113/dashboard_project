@@ -442,11 +442,7 @@ input[type=number] {
 footer { display: none !important; }
 """
 
-with gr.Blocks(
-    theme=gr.themes.Base(primary_hue="blue"),
-    css=CSS,
-    title="AEP Energy Dashboard"
-) as demo:
+with gr.Blocks(title="AEP Energy Dashboard") as demo:
 
     # HEADER
     gr.HTML("""
@@ -552,4 +548,10 @@ with gr.Blocks(
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
-    demo.launch(server_name="0.0.0.0", server_port=port, share=False)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        share=False,
+        theme=gr.themes.Base(primary_hue="blue"),
+        css=CSS
+    )
