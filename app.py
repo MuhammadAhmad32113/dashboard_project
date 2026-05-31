@@ -57,19 +57,21 @@ def update_dashboard(year_start, year_end, seasons, months_sel,
 def _kpi_card(label, value, border):
     return f"""
     <div style="flex:1;min-width:120px;
-                background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
+                background:rgba(18,33,49,0.7);
+                backdrop-filter:blur(20px);
                 border:1px solid rgba(255,255,255,0.08);
                 border-top:2px solid {border};
                 border-radius:16px;padding:16px 18px;
-                box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06);
-                position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-15px;right:-15px;width:70px;height:70px;
-                  background:radial-gradient(circle,{border}33 0%,transparent 70%);
+                box-shadow:0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
+                position:relative;overflow:hidden;transition:all 0.2s;">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+                  background:radial-gradient(circle,{border}22 0%,transparent 70%);
                   border-radius:50%;pointer-events:none;"></div>
-      <div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:1.2px;
-                  text-transform:uppercase;margin-bottom:8px;">{label}</div>
-      <div style="font-size:15px;font-weight:700;color:#f1f5f9;
-                  letter-spacing:-0.3px;white-space:nowrap;">{value}</div>
+      <div style="font-family:JetBrains Mono,monospace;font-size:10px;color:#958da1;
+                  font-weight:600;letter-spacing:0.05em;text-transform:uppercase;
+                  margin-bottom:8px;">{label}</div>
+      <div style="font-size:15px;font-weight:700;color:#d4e4fa;
+                  white-space:nowrap;letter-spacing:-0.3px;">{value}</div>
     </div>"""
 
 
@@ -100,28 +102,21 @@ def reset_filters():
 
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@600&display=swap');
 
-/* ══ RESET & BASE ══ */
 *, html, body, .gradio-container {
-    font-family: 'Inter', 'Segoe UI', sans-serif !important;
+    font-family: "Inter", "Segoe UI", sans-serif !important;
     box-sizing: border-box !important;
 }
-*:focus, *:focus-visible, *:focus-within {
-    outline: none !important;
-    box-shadow: none !important;
-}
-html, body {
-    overflow-x: hidden !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-}
+*:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
+html, body { overflow-x: hidden !important; width: 100% !important; }
+
 body, .gradio-container {
-    background: #0d0d18 !important;
+    background: #051424 !important;
     background-image:
-        radial-gradient(ellipse at 10% 0%, rgba(99,102,241,0.18) 0%, transparent 45%),
-        radial-gradient(ellipse at 90% 100%, rgba(139,92,246,0.12) 0%, transparent 45%) !important;
-    color: #e2e8f0 !important;
+        radial-gradient(ellipse at 10% 0%, rgba(124,58,237,0.2) 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 100%, rgba(99,102,241,0.12) 0%, transparent 40%) !important;
+    color: #d4e4fa !important;
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -130,38 +125,36 @@ body, .gradio-container {
 .gradio-container > .main > .wrap {
     max-width: 100% !important;
     padding: 0 20px !important;
-    overflow-x: hidden !important;
 }
 
 /* ══ HEADER ══ */
 #dash-header {
     background: linear-gradient(135deg,
-        rgba(79,70,229,0.22) 0%,
-        rgba(13,13,24,0.97) 50%,
-        rgba(124,58,237,0.15) 100%) !important;
-    border: 1px solid rgba(99,102,241,0.3) !important;
+        rgba(124,58,237,0.2) 0%,
+        rgba(5,20,36,0.97) 50%,
+        rgba(99,102,241,0.12) 100%) !important;
+    border: 1px solid rgba(210,187,255,0.2) !important;
     border-radius: 20px !important;
     padding: 28px 36px !important;
     margin-bottom: 20px !important;
     position: relative !important;
     overflow: hidden !important;
-    box-shadow: 0 0 80px rgba(99,102,241,0.1), 0 20px 60px rgba(0,0,0,0.5),
-                inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    box-shadow: 0 0 80px rgba(124,58,237,0.12), 0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.07) !important;
 }
 #dash-header::before {
     content: "" !important;
     position: absolute !important;
     top: -80px !important; right: -60px !important;
     width: 280px !important; height: 280px !important;
-    background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%) !important;
-    border-radius: 50% !important;
-    pointer-events: none !important;
+    background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 65%) !important;
+    border-radius: 50% !important; pointer-events: none !important;
 }
 #dash-header h1 {
     margin: 0 !important;
     font-size: 24px !important;
     font-weight: 700 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 60%, #a5b4fc 100%) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #d2bbff 60%, #a5b4fc 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -172,122 +165,156 @@ body, .gradio-container {
     font-size: 13px !important;
 }
 
-/* ══ FILTER PANEL ══ */
+/* ══ FILTER PANEL OUTER ══ */
 .filter-panel > div:first-child {
-    background: rgba(255,255,255,0.03) !important;
+    background: rgba(30,30,46,0.5) !important;
+    backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 20px !important;
-    padding: 24px 28px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4),
+    padding: 24px 24px !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4),
                 inset 0 1px 0 rgba(255,255,255,0.05) !important;
     width: 100% !important;
-    overflow: visible !important;
-}
-.filter-panel {
-    width: 100% !important;
-    overflow: visible !important;
 }
 .filter-panel .label-wrap span {
-    color: #e2e8f0 !important;
+    color: #d4e4fa !important;
     font-weight: 600 !important;
 }
 
-/* ── section titles ── */
+/* ── SECTION TITLES — JetBrains Mono style ── */
 .section-title {
-    font-weight: 700 !important;
-    color: #818cf8 !important;
+    font-family: "JetBrains Mono", monospace !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #d2bbff !important;
     text-transform: uppercase !important;
-    letter-spacing: 1.5px !important;
-    margin: 0 0 12px 0 !important;
+    letter-spacing: 0.05em !important;
+    margin: 0 0 14px 0 !important;
     padding-bottom: 8px !important;
-    border-bottom: 1px solid rgba(99,102,241,0.2) !important;
-    white-space: nowrap !important;
+    border-bottom: 1px solid rgba(210,187,255,0.15) !important;
 }
 
-/* ══ REMOVE UGLY BOXES ══ */
-.gradio-container .block,
-.gradio-container .gr-box,
+/* ══ GLASS TILES per column ══ */
+.gradio-container .gr-row > div,
 .gradio-container .gr-form,
-.gradio-container fieldset,
-div.block, .padded, .gap,
-.svelte-1f354aw, .svelte-90oupt,
-.svelte-1hnfib2, .svelte-1gfkn6u,
-.gradio-container > div > div > div > div {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+.gradio-container .block { background: transparent !important; border: none !important; box-shadow: none !important; }
+
+/* Make each filter column look like a glass tile */
+.filter-panel .gr-row > div > div,
+.filter-panel [class*="column"] > div {
+    background: rgba(30,30,46,0.6) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3) !important;
 }
 
-/* ══ SLIDERS — fix cut numbers ══ */
+/* ══ SLIDERS ══ */
 input[type=range] {
-    accent-color: #6366f1 !important;
+    -webkit-appearance: none !important;
     width: 100% !important;
-    min-width: 0 !important;
+    height: 4px !important;
+    background: rgba(255,255,255,0.1) !important;
+    border-radius: 2px !important;
+    outline: none !important;
+    accent-color: #7c3aed !important;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    height: 18px !important;
+    width: 18px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    box-shadow: 0 0 10px rgba(210,187,255,0.5) !important;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    height: 4px !important;
+    background: rgba(255,255,255,0.1) !important;
+    border-radius: 2px !important;
 }
 input[type=number] {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    color: #e2e8f0 !important;
-    border-radius: 8px !important;
-    min-width: 72px !important;
-    max-width: 90px !important;
-    font-size: 13px !important;
-    padding: 4px 6px !important;
-    text-align: center !important;
-}
-.gradio-container .wrap { overflow: visible !important; }
-
-/* ══ INPUTS ══ */
-.gradio-container label span {
-    color: #cbd5e1 !important;
-    font-weight: 500 !important;
-    white-space: nowrap !important;
-}
-.gradio-container input[type=text], .gradio-container textarea {
-    background: rgba(255,255,255,0.05) !important;
+    background: #122131 !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #e2e8f0 !important;
-    border-radius: 10px !important;
+    color: #d2bbff !important;
+    border-radius: 6px !important;
+    min-width: 72px !important;
+    font-size: 13px !important;
+    padding: 4px 8px !important;
+    font-family: "JetBrains Mono", monospace !important;
 }
-input[type=checkbox]:checked { accent-color: #6366f1 !important; }
-.gradio-container .multiselect,
-.gradio-container .wrap:not([class*="svelte"]) {
-    background: rgba(255,255,255,0.05) !important;
+
+/* ══ CHECKBOXES ══ */
+input[type=checkbox] { accent-color: #7c3aed !important; }
+input[type=checkbox]:checked { accent-color: #7c3aed !important; }
+.gradio-container label span { color: #ccc3d8 !important; font-weight: 500 !important; }
+
+/* ══ MULTI-SELECT ══ */
+.gradio-container .wrap,
+.gradio-container .multiselect {
+    background: rgba(5,20,36,0.5) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
     border-radius: 10px !important;
 }
 .gradio-container .token {
-    background: linear-gradient(135deg,#4f46e5,#7c3aed) !important;
-    color: #fff !important;
+    background: #7c3aed !important;
+    color: #ede0ff !important;
     border-radius: 6px !important;
+    font-size: 12px !important;
+    font-family: "JetBrains Mono", monospace !important;
+}
+
+/* ══ TEXT INPUT ══ */
+.gradio-container input[type=text], .gradio-container textarea {
+    background: rgba(1,15,31,0.5) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #d4e4fa !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+}
+.gradio-container input[type=text]:focus {
+    border-color: rgba(210,187,255,0.4) !important;
 }
 
 /* ══ BUTTONS ══ */
 .btn-apply {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-    color: #fff !important;
+    background: #7c3aed !important;
+    color: #ede0ff !important;
     border: none !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.45) !important;
+    border-radius: 14px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    box-shadow: 0 0 20px rgba(124,58,237,0.4), 0 4px 15px rgba(0,0,0,0.3) !important;
+    letter-spacing: 0.3px !important;
+}
+.btn-apply:hover {
+    background: #6d28d9 !important;
+    box-shadow: 0 0 30px rgba(124,58,237,0.6) !important;
 }
 .btn-reset {
-    background: rgba(255,255,255,0.05) !important;
-    color: #94a3b8 !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 12px !important;
+    background: rgba(255,255,255,0.04) !important;
+    color: #958da1 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 14px !important;
     font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
 }
+.btn-reset:hover { background: rgba(255,255,255,0.08) !important; color: #d4e4fa !important; }
 
 /* ══ KPI + VIZ HEADINGS ══ */
 #kpi-heading, #viz-heading {
-    font-weight: 700 !important;
-    color: #818cf8 !important;
-    letter-spacing: 1.5px !important;
+    font-family: "JetBrains Mono", monospace !important;
+    font-weight: 600 !important;
+    color: #d2bbff !important;
+    letter-spacing: 0.05em !important;
     text-transform: uppercase !important;
+    font-size: 11px !important;
     margin: 24px 0 14px !important;
     padding-left: 14px !important;
-    border-left: 3px solid #6366f1 !important;
+    border-left: 3px solid #7c3aed !important;
 }
 
 /* ══ TABS ══ */
@@ -295,39 +322,38 @@ input[type=checkbox]:checked { accent-color: #6366f1 !important; }
     background: transparent !important;
     border-bottom: 1px solid rgba(255,255,255,0.07) !important;
     margin-bottom: 16px !important;
-    max-width: 100% !important;
     overflow-x: hidden !important;
 }
 button[role="tab"], .tab-nav button {
     font-weight: 500 !important;
-    color: #64748b !important;
+    color: #4a4455 !important;
     background: transparent !important;
     border: none !important;
     padding: 12px 20px !important;
     white-space: nowrap !important;
     outline: none !important;
+    font-size: 14px !important;
 }
 button[role="tab"] svg, button[role="tab"]::after,
 .tab-nav button svg { display: none !important; }
 button[role="tab"]:hover, .tab-nav button:hover {
-    color: #a5b4fc !important;
-    background: rgba(99,102,241,0.08) !important;
+    color: #d2bbff !important;
+    background: rgba(124,58,237,0.08) !important;
     border-radius: 8px 8px 0 0 !important;
 }
 button[role="tab"][aria-selected="true"], .tab-nav button.selected {
-    color: #a5b4fc !important;
+    color: #d2bbff !important;
     font-weight: 600 !important;
-    border-bottom: 2px solid #6366f1 !important;
+    border-bottom: 2px solid #7c3aed !important;
 }
 
 /* ══ CHART CARDS ══ */
 .gradio-plot, .gr-plot {
-    background: linear-gradient(135deg,
-        rgba(255,255,255,0.04) 0%,
-        rgba(255,255,255,0.02) 100%) !important;
+    background: rgba(18,33,49,0.7) !important;
+    backdrop-filter: blur(20px) !important;
     border-radius: 20px !important;
     border: 1px solid rgba(255,255,255,0.07) !important;
-    padding: 16px !important;
+    padding: 20px !important;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4),
                 inset 0 1px 0 rgba(255,255,255,0.05) !important;
     max-width: 100% !important;
@@ -335,23 +361,19 @@ button[role="tab"][aria-selected="true"], .tab-nav button.selected {
     transition: border 0.3s, box-shadow 0.3s, transform 0.2s !important;
 }
 .gradio-plot:hover, .gr-plot:hover {
-    border: 1px solid rgba(99,102,241,0.3) !important;
-    box-shadow: 0 16px 48px rgba(99,102,241,0.15) !important;
+    border: 1px solid rgba(124,58,237,0.35) !important;
+    box-shadow: 0 16px 48px rgba(124,58,237,0.15) !important;
     transform: translateY(-2px) !important;
 }
-.gradio-plot > .label-wrap,
-.gr-plot > .label-wrap,
-.gradio-plot .icon-buttons,
-.gradio-plot button { display: none !important; }
+.gradio-plot > .label-wrap, .gr-plot > .label-wrap,
+.gradio-plot .icon-buttons, .gradio-plot button,
+.gradio-plot svg.icon { display: none !important; }
 
-/* ══ ROW / COLUMN ══ */
+/* ══ OVERFLOW FIX ══ */
 .gradio-container .gr-row,
-.gradio-container > div {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-}
+.gradio-container > div { max-width: 100% !important; overflow-x: hidden !important; }
 
-.gradio-markdown p { color: #64748b !important; }
+.gradio-markdown p { color: #4a4455 !important; }
 footer { display: none !important; }
 """
 
