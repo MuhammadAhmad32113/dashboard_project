@@ -241,6 +241,20 @@ button[role="tab"][aria-selected="true"], .tab-nav button.selected { color: #d2b
     border-bottom: 1px solid rgba(210,187,255,0.2) !important;
 }
 
+
+/* ── remove ONLY small inner dark boxes, keep big glass tiles ── */
+.filter-panel .block.svelte-1f354aw,
+.filter-panel .block.svelte-90oupt,
+.filter-panel .block.svelte-1hnfib2,
+.filter-panel .block.svelte-1gfkn6u,
+.filter-panel .form.svelte-1f354aw,
+.filter-panel .gap,
+.filter-panel > div > div > div > div > div > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
 footer { display: none !important; }
 """
 
