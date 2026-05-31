@@ -211,6 +211,36 @@ button[role="tab"][aria-selected="true"], .tab-nav button.selected { color: #d2b
 
 .gradio-container .gr-row, .gradio-container > div { max-width: 100% !important; overflow-x: hidden !important; }
 .gradio-markdown p { color: #4a4455 !important; }
+
+/* ── remove inner dark boxes ── */
+.filter-panel div.block,
+.filter-panel .block,
+.filter-panel .form,
+.filter-panel .gap,
+.filter-panel .padded,
+.filter-panel fieldset,
+.filter-panel .svelte-1f354aw,
+.filter-panel .svelte-90oupt,
+.filter-panel .svelte-1hnfib2,
+.filter-panel [class*="svelte-"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px !important;
+}
+
+/* ── section titles bigger ── */
+.section-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #d2bbff !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+    margin: 0 0 14px 0 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(210,187,255,0.2) !important;
+}
+
 footer { display: none !important; }
 """
 
