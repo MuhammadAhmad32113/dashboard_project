@@ -212,44 +212,56 @@ button[role="tab"][aria-selected="true"], .tab-nav button.selected { color: #d2b
 .gradio-container .gr-row, .gradio-container > div { max-width: 100% !important; overflow-x: hidden !important; }
 .gradio-markdown p { color: #4a4455 !important; }
 
-/* ── remove inner dark boxes ── */
-.filter-panel div.block,
-.filter-panel .block,
-.filter-panel .form,
-.filter-panel .gap,
-.filter-panel .padded,
-.filter-panel fieldset,
-.filter-panel .svelte-1f354aw,
-.filter-panel .svelte-90oupt,
-.filter-panel .svelte-1hnfib2,
-.filter-panel [class*="svelte-"] {
+
+
+/* ── restore glass tiles per filter column ── */
+.filter-panel .gr-row > div > div {
+    background: rgba(18,33,49,0.6) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* ── remove small nested boxes inside tiles ── */
+.filter-panel .gr-row > div > div > div,
+.filter-panel .gr-row > div > div .block,
+.filter-panel .gr-row > div > div .gap,
+.filter-panel .gr-row > div > div fieldset {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 2px !important;
+    padding: 0 !important;
 }
 
 /* ── section titles bigger ── */
 .section-title {
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     color: #d2bbff !important;
     text-transform: uppercase !important;
     letter-spacing: 1.5px !important;
-    margin: 0 0 14px 0 !important;
+    margin: 0 0 12px 0 !important;
     padding-bottom: 8px !important;
     border-bottom: 1px solid rgba(210,187,255,0.2) !important;
 }
 
 
-/* ── remove ONLY small inner dark boxes, keep big glass tiles ── */
-.filter-panel .block.svelte-1f354aw,
-.filter-panel .block.svelte-90oupt,
-.filter-panel .block.svelte-1hnfib2,
-.filter-panel .block.svelte-1gfkn6u,
-.filter-panel .form.svelte-1f354aw,
+/* ── restore big glass tiles ── */
+.filter-panel > div:first-child {
+    background: rgba(30,30,46,0.5) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 20px !important;
+    padding: 24px 24px !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4) !important;
+}
+
+/* ── remove ONLY the small inner dark boxes ── */
+.filter-panel .wrap,
+.filter-panel .wrap.svelte-1hnfib2,
 .filter-panel .gap,
-.filter-panel > div > div > div > div > div > div {
+.filter-panel .padded {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
