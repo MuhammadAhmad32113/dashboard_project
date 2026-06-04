@@ -1,148 +1,160 @@
 """
-filters.py — Data loading, cleaning, and filtering functions
-Ember Yearly Electricity Dashboard
+filters.py
+----------
+All data loading, cleaning, and filtering logic for the AEP Energy Dashboard.
 """
 
 import pandas as pd
 import numpy as np
 
-DATA_PATH = "data/europe_yearly_full_release_long_format.csv"
 
-
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────
 # 1. LOAD & CLEAN
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────
 
-def load_data() -> pd.DataFrame:
-    try:
-        import streamlit as st
-        @st.cache_data
-        def _inner():
-            return _load()
-        return _inner()
-    except Exception:
-        return _load()
+def load_and_clean(filepath: str = "data/AEP_hourly.csv") -> pd.DataFrame:
+    """
+    Load the AEP_hourly dataset, parse datetimes, engineer
+    all derived time features, and return a clean DataFrame.
+    """
+    df = pd.read_csv(filepath)
 
+    # Parse datetime
+    df["Datetime"] = pd.to_datetime(df["Datetime"])
 
-def _load() -> pd.DataFrame:
-    df = pd.read_csv(DATA_PATH)
+    # Drop duplicates and nulls
+    df.drop_duplicates(inplace=True)
+    df.dropna(inplace=True)
 
-    # ── Basic cleaning ──────────────────────────────────────────────────
-    df.columns = df.columns.str.strip()
-    df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype("Int64")
-    df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
-    df["YoY absolute change"] = pd.to_numeric(df["YoY absolute change"], errors="coerce")
-    df["YoY % change"] = pd.to_numeric(df["YoY % change"], errors="coerce")
+    # Sort chronologically
+    df.sort_values("Datetime", inplace=True)
+    df.reset_index(drop=True, inplace=True)
 
-    # Drop rows where both Year and Value are null
-    df.dropna(subset=["Year", "Value"], how="all", inplace=True)
+    # ── Derived time features ──────────────────
+    df["Year"]        = df["Datetime"].dt.year
+    df["Month"]       = df["Datetime"].dt.month
+    df["MonthName"]   = df["Datetime"].dt.strftime("%b")
+    df["Day"]         = df["Datetime"].dt.day
+    df["Hour"]        = df["Datetime"].dt.hour
+    df["DayOfWeek"]   = df["Datetime"].dt.dayofweek          # 0 = Mon
+    df["DayName"]     = df["Datetime"].dt.strftime("%a")
+    df["WeekOfYear"]  = df["Datetime"].dt.isocalendar().week.astype(int)
+    df["Quarter"]     = df["Datetime"].dt.quarter
+    df["IsWeekend"]   = df["DayOfWeek"].isin([5, 6])
 
-    # ── Derived helpers ─────────────────────────────────────────────────
-    for col in ["EU", "OECD", "G20", "G7", "ASEAN"]:
-        df[col] = df[col].fillna(0).astype(int)
+    # Season
+    df["Season"] = df["Month"].map({
+        12: "Winter", 1: "Winter", 2: "Winter",
+        3:  "Spring", 4: "Spring", 5: "Spring",
+        6:  "Summer", 7: "Summer", 8: "Summer",
+        9:  "Autumn", 10: "Autumn", 11: "Autumn",
+    })
 
-    df["is_country"] = df["Area type"].str.lower().str.contains("country", na=False)
+    # Time of day
+    def _tod(h):
+        if 5 <= h < 12:  return "Morning"
+        if 12 <= h < 17: return "Afternoon"
+        if 17 <= h < 21: return "Evening"
+        return "Night"
+
+    df["TimeOfDay"] = df["Hour"].apply(_tod)
+
+    # Daily average (used in area / line charts)
+    daily = df.groupby(df["Datetime"].dt.date)["AEP_MW"].mean()
+    df["Date"]       = df["Datetime"].dt.date
+    df["DailyAvg"]   = df["Date"].map(daily)
+
     return df
 
 
-# ─────────────────────────────────────────────
-# 2. FILTER HELPERS
-# ─────────────────────────────────────────────
-
-def get_countries(df: pd.DataFrame) -> list:
-    return sorted(df.loc[df["is_country"], "Area"].dropna().unique().tolist())
-
-
-def get_year_range(df: pd.DataFrame):
-    return int(df["Year"].min()), int(df["Year"].max())
-
-
-def get_variables(df: pd.DataFrame) -> list:
-    return sorted(df["Variable"].dropna().unique().tolist())
-
-
-def get_categories(df: pd.DataFrame) -> list:
-    return sorted(df["Category"].dropna().unique().tolist())
-
+# ──────────────────────────────────────────────
+# 2. FILTER ENGINE
+# ──────────────────────────────────────────────
 
 def apply_filters(
     df: pd.DataFrame,
-    countries: list,
-    year_range: tuple,
-    categories: list,
-    variables: list,
-    search_text: str = "",
+    year_range:    tuple  = None,
+    seasons:       list   = None,
+    months:        list   = None,
+    mw_range:      tuple  = None,
+    day_types:     list   = None,
+    keyword:       str    = "",
 ) -> pd.DataFrame:
-    """Apply all sidebar filters and return filtered DataFrame."""
+    """
+    Apply all dashboard filters to the DataFrame and return the result.
+
+    Parameters
+    ----------
+    df          : full cleaned DataFrame
+    year_range  : (min_year, max_year)  inclusive
+    seasons     : list of season strings, e.g. ['Summer', 'Winter']
+    months      : list of month numbers 1-12
+    mw_range    : (min_mw, max_mw)
+    day_types   : ['Weekday', 'Weekend'] — either/both
+    keyword     : text to search in Datetime string representation
+    """
     filtered = df.copy()
 
-    if countries:
-        filtered = filtered[filtered["Area"].isin(countries)]
+    # Date / Year range
+    if year_range:
+        filtered = filtered[
+            (filtered["Year"] >= year_range[0]) &
+            (filtered["Year"] <= year_range[1])
+        ]
 
-    filtered = filtered[
-        (filtered["Year"] >= year_range[0]) & (filtered["Year"] <= year_range[1])
-    ]
+    # Season (category filter)
+    if seasons:
+        filtered = filtered[filtered["Season"].isin(seasons)]
 
-    if categories:
-        filtered = filtered[filtered["Category"].isin(categories)]
+    # Month multi-select
+    if months:
+        filtered = filtered[filtered["Month"].isin(months)]
 
-    if variables:
-        filtered = filtered[filtered["Variable"].isin(variables)]
+    # MW numerical range slider
+    if mw_range:
+        filtered = filtered[
+            (filtered["AEP_MW"] >= mw_range[0]) &
+            (filtered["AEP_MW"] <= mw_range[1])
+        ]
 
-    if search_text.strip():
-        mask = (
-            filtered["Area"].str.contains(search_text, case=False, na=False)
-            | filtered["Variable"].str.contains(search_text, case=False, na=False)
-            | filtered["Category"].str.contains(search_text, case=False, na=False)
-            | filtered["Subcategory"].str.contains(search_text, case=False, na=False)
-        )
-        filtered = filtered[mask]
+    # Day type (Weekday / Weekend)
+    if day_types:
+        if "Weekday" in day_types and "Weekend" not in day_types:
+            filtered = filtered[~filtered["IsWeekend"]]
+        elif "Weekend" in day_types and "Weekday" not in day_types:
+            filtered = filtered[filtered["IsWeekend"]]
 
-    return filtered.reset_index(drop=True)
+    # Keyword / text search on Datetime
+    if keyword and keyword.strip():
+        kw = keyword.strip().lower()
+        filtered = filtered[
+            filtered["Datetime"].astype(str).str.lower().str.contains(kw, na=False)
+        ]
+
+    return filtered
 
 
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────
 # 3. KPI HELPERS
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────
 
-def compute_kpis(df: pd.DataFrame, filtered: pd.DataFrame) -> dict:
-    total_records = len(filtered)
-    latest_year = int(filtered["Year"].max()) if not filtered.empty else "N/A"
+def compute_kpis(df: pd.DataFrame) -> dict:
+    """Return a dict of KPI values for the summary cards."""
+    if df.empty:
+        return {k: "N/A" for k in
+                ["total_records", "mean_mw", "max_mw", "min_mw",
+                 "peak_hour", "peak_date", "std_mw", "years_covered"]}
 
-    co2_rows = filtered[filtered["Variable"] == "CO2 intensity"]["Value"]
-    avg_co2 = round(co2_rows.mean(), 1) if not co2_rows.empty else "N/A"
-
-    ren = filtered[
-        (filtered["Variable"] == "Renewables")
-        & (filtered["Unit"] == "%")
-        & (filtered["Year"] == latest_year)
-        & filtered["is_country"]
-    ]
-    if not ren.empty:
-        idx = ren["Value"].idxmax()
-        top_ren_country = ren.loc[idx, "Area"]
-        top_ren_val = round(ren.loc[idx, "Value"], 1)
-    else:
-        top_ren_country, top_ren_val = "N/A", "N/A"
-
-    co2_latest = filtered[
-        (filtered["Variable"] == "CO2 intensity")
-        & (filtered["Year"] == latest_year)
-        & filtered["is_country"]
-    ]
-    if not co2_latest.empty:
-        idx2 = co2_latest["Value"].idxmax()
-        top_co2_country = co2_latest.loc[idx2, "Area"]
-        top_co2_val = round(co2_latest.loc[idx2, "Value"], 1)
-    else:
-        top_co2_country, top_co2_val = "N/A", "N/A"
+    peak_idx  = df["AEP_MW"].idxmax()
+    trough_idx = df["AEP_MW"].idxmin()
 
     return {
-        "total_records": total_records,
-        "latest_year": latest_year,
-        "avg_co2_intensity": avg_co2,
-        "top_ren_country": top_ren_country,
-        "top_ren_val": top_ren_val,
-        "top_co2_country": top_co2_country,
-        "top_co2_val": top_co2_val,
+        "total_records":  f"{len(df):,}",
+        "mean_mw":        f"{df['AEP_MW'].mean():,.1f} MW",
+        "max_mw":         f"{df['AEP_MW'].max():,.0f} MW",
+        "min_mw":         f"{df['AEP_MW'].min():,.0f} MW",
+        "peak_date":      str(df.loc[peak_idx, "Datetime"])[:13] + ":00",
+        "trough_date":    str(df.loc[trough_idx, "Datetime"])[:13] + ":00",
+        "std_mw":         f"{df['AEP_MW'].std():,.1f} MW",
+        "years_covered":  f"{df['Year'].min()} – {df['Year'].max()}",
     }
