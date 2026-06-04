@@ -5,8 +5,6 @@ Course : Exploratory Data Analysis
 
 import gradio as gr
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
 
 from filters import load_and_clean, apply_filters, compute_kpis
 from charts import (
@@ -387,4 +385,4 @@ with gr.Blocks(
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
-    demo.launch(server_name="0.0.0.0", server_port=port, share=False)
+   demo.launch()
