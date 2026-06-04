@@ -1,6 +1,5 @@
-streamlit
+gradio
 pandas
 numpy
 matplotlib
 seaborn
-plotly
