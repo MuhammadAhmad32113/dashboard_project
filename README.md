@@ -1,123 +1,133 @@
-# ⚡ AEP Hourly Energy Consumption Dashboard
+# ⚡ Ember Yearly Electricity Dashboard
 
 **Course:** Exploratory Data Analysis  
 **Instructor:** Ali Hassan Sherazi  
-**Dataset:** `AEP_hourly.csv` (121,273 hourly records, 2004–2018)  
-**Framework:** Gradio + Pandas + Matplotlib + Seaborn
+**Submission Date:** 05-June-2026  
+**Dataset:** `europe_yearly_full_release_long_format.csv`  
+**Topic:** Country-level annual electricity mix and emissions intensity from Ember Climate
 
 ---
 
-## 📌 Project Overview
-
-This dashboard provides an interactive, professional-grade analysis of the
-American Electric Power (AEP) grid hourly load data. It features **10 required
-chart types**, **6 interactive filters**, and **KPI summary cards** — all wired
-together so every filter instantly updates every chart.
-
----
-
-## 🗂️ Project Structure
+## 📂 Project Structure
 
 ```
 dashboard_project/
 ├── data/
-│   └── AEP_hourly.csv          ← EXACT original filename (do not rename)
+│   └── europe_yearly_full_release_long_format.csv   ← Original dataset (DO NOT rename)
 ├── notebooks/
-│   └── analysis.ipynb          ← Exploratory Data Analysis notebook
-├── app.py                      ← Main Gradio dashboard (entry point)
-├── charts.py                   ← All 10+ chart functions
-├── filters.py                  ← Data loading, cleaning, filter logic
-├── requirements.txt            ← Python dependencies
-└── README.md                   ← This file
+│   └── analysis.ipynb                               ← Exploratory Data Analysis
+├── app.py                                           ← Main Streamlit dashboard
+├── charts.py                                        ← All 10+ chart functions
+├── filters.py                                       ← Data loading, cleaning & filters
+├── requirements.txt                                 ← Python dependencies
+└── README.md                                        ← This file
 ```
 
 ---
 
-## ⚙️ How to Install & Run
+## 🚀 Installation & Running
 
-### Step 1 — Clone / unzip the project
-```bash
-unzip dashboard_project.zip
-cd dashboard_project
-```
+### 1. Clone / unzip the project folder
 
-### Step 2 — Create a virtual environment (recommended)
-```bash
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-```
-
-### Step 3 — Install dependencies
+### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 — Run the dashboard
+### 3. Run the dashboard
 ```bash
-python app.py
+streamlit run app.py
 ```
 
-Then open **http://127.0.0.1:7860** in your browser.
+The dashboard opens automatically in your browser at `http://localhost:8501`.
 
----
-
-## 📊 Charts Included
-
-| # | Chart Type   | Insight Shown                          |
-|---|-------------|----------------------------------------|
-| 1 | Pie Chart    | Energy share by Season                 |
-| 2 | Histogram    | Distribution of hourly MW values       |
-| 3 | Line Chart   | Monthly average trend over years       |
-| 4 | Bar Chart    | Average consumption by hour of day     |
-| 5 | Scatter Plot | Hour vs MW coloured by season          |
-| 6 | Box Plot     | Spread & outliers by month             |
-| 7 | Heatmap      | Hour × Month average energy matrix     |
-| 8 | Area Chart   | Daily rolling 7 & 30-day averages      |
-| 9 | Count Plot   | Record count by day of week            |
-|10 | Violin Plot  | MW distribution shape by season        |
-| ★ | Bonus Bar    | Year-over-year average comparison      |
-
----
-
-## 🔧 Filters Available
-
-| Filter              | Type              | Description                        |
-|--------------------|-------------------|------------------------------------|
-| Start / End Year   | Range Slider      | Select any sub-period of the data  |
-| Season             | Checkbox Group    | Filter by Winter/Spring/Summer/Autumn |
-| Month              | Multi-Select Dropdown | Pick specific months            |
-| Min / Max MW       | Numerical Slider  | Focus on a consumption range       |
-| Day Type           | Checkbox Group    | Weekday vs Weekend                 |
-| Text Search        | Textbox           | Search datetime strings (e.g. "2010-07") |
-| Reset Button       | Button            | Restore all filters to defaults    |
-
----
-
-## 💡 Key Insights from the Data
-
-- **Peak loads** consistently occur during **summer afternoons** (June–August,
-  hours 14:00–18:00), driven by air conditioning demand.
-- **Lowest consumption** happens in **spring nights** (3:00–5:00 AM).
-- There is a visible **dip post-2008** (financial crisis, reduced industrial activity).
-- **Weekdays** consume on average ~8% more than weekends.
-- The **heatmap** reveals two daily peaks: a morning ramp (~7–9 AM) and a
-  larger evening peak (~17–20 PM).
-
----
-
-## 📦 Dependencies
-
-```
-gradio>=4.0.0
-pandas>=2.0.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
+### 4. Run the EDA notebook
+```bash
+cd notebooks
+jupyter notebook analysis.ipynb
 ```
 
 ---
 
-*Submission Date: 05-June-2026 | Individual Project*
+## 🗂️ Dataset Overview
+
+| Feature | Details |
+|---|---|
+| Source | Ember Climate |
+| File | `europe_yearly_full_release_long_format.csv` |
+| Shape | 69,348 rows × 18 columns |
+| Countries | 38 European countries + EU aggregate |
+| Year range | 1990 – 2025 |
+| Categories | Electricity demand, generation, imports, power sector emissions |
+| Key variables | CO2 intensity, Renewables, Solar, Wind, Hydro, Nuclear, Coal, Gas, Fossil, Demand |
+| Units | TWh, MWh, %, MtCO2e, gCO2e/kWh |
+
+---
+
+## 📊 Charts Implemented
+
+| # | Chart Type | Purpose |
+|---|---|---|
+| 1 | **Pie Chart** | Energy generation mix for a selected country & year |
+| 2 | **Histogram** | Frequency distribution of CO₂ intensity |
+| 3 | **Line Chart** | Variable trend over time for selected countries |
+| 4 | **Bar Chart** | Cross-country comparison of any variable in a given year |
+| 5 | **Scatter Plot** | Renewables % vs CO₂ intensity with trend line |
+| 6 | **Box Plot** | EU vs Non-EU distribution of any variable |
+| 7 | **Heatmap** | Correlation matrix of key electricity variables |
+| 8 | **Area Chart** | Renewables share over time (multi-country) |
+| 9 | **Count Plot** | Record count by data category |
+| 10 | **Violin Plot** | Variable distribution by decade |
+| ★ | **Bubble Chart** *(Bonus)* | Renewables × CO₂ × Demand in one view |
+
+---
+
+## 🎛️ Filters Implemented
+
+| Filter | Type | Effect |
+|---|---|---|
+| Year Range | Slider | Limits all charts to selected year span |
+| Countries | Multi-select | Filters by one or more countries |
+| Data Category | Multi-select | Limits to selected Ember categories |
+| Variables | Multi-select | Limits to chosen electricity variables |
+| Search | Text input | Keyword search across Area, Variable, Category |
+| Single Year | Slider | Picks year for cross-country charts |
+| Pie country | Dropdown | Selects country for the Pie Chart |
+| Reset | Button | Reruns app to restore defaults |
+
+All filters are connected — every chart updates dynamically when any filter changes.
+
+---
+
+## 💡 Key Insights
+
+1. **Norway, Switzerland, Sweden** consistently show the lowest CO₂ intensity in Europe (<50 gCO₂e/kWh) due to dominant hydroelectric and nuclear generation.
+
+2. **Kosovo and Poland** carry the heaviest coal burden, with CO₂ intensity exceeding 690 gCO₂e/kWh — more than 20× Norway's figure.
+
+3. **EU aggregate CO₂ intensity** fell by over 40% between 1990 and 2023, the fastest power-sector decarbonisation in the world.
+
+4. **Solar growth** accelerated sharply post-2015 across Spain, Italy, Greece and Germany, explaining a kink in the Renewables trend line.
+
+5. **Strong negative correlation** (≈ −0.85) between Renewables share and CO₂ intensity — visible in both the Scatter Plot and Heatmap.
+
+---
+
+## 🛠️ Technical Stack
+
+| Tool | Role |
+|---|---|
+| Python 3.x | Core language |
+| Pandas | Data loading, cleaning, filtering, aggregation |
+| NumPy | Numerical operations |
+| Matplotlib | Core chart creation |
+| Seaborn | Statistical visualisations (box, violin, heatmap, count) |
+| Streamlit | Interactive dashboard frontend |
+
+---
+
+## ⚠️ Important Notes
+
+- **Do NOT rename** the dataset file.
+- All charts respond to the sidebar filters simultaneously.
+- The dashboard is designed for **dark mode** — best viewed in a modern browser.

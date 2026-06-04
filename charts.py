@@ -1,382 +1,721 @@
 """
-charts.py  —  AEP Energy Dashboard
-Same colors + dark theme, now using Seaborn for all charts.
+charts.py — All visualization functions for the Ember Electricity Dashboard
+Charts: Pie, Histogram, Line, Bar, Scatter, Box, Heatmap, Area, Count, Violin
+Bonus : Bubble Chart
 """
+
+import warnings
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import seaborn as sns
-from matplotlib.ticker import FuncFormatter
+import plotly.graph_objects as go
 
 # ─────────────────────────────────────────────
-#  SAME PALETTE — unchanged
+# GLOBAL STYLE
 # ─────────────────────────────────────────────
-BG        = "#0d1c2d"
-CARD_BG   = "#122131"
-GRID      = "#1c2b3c"
-TEXT      = "#d4e4fa"
-TEXT_SUB  = "#8899aa"
 
-BLUE    = "#3b82f6"
-EMERALD = "#10b981"
-AMBER   = "#f59e0b"
-CORAL   = "#f87171"
-VIOLET  = "#8b5cf6"
-CYAN    = "#06b6d4"
+PALETTE = [
+    "#2563EB", "#16A34A", "#DC2626", "#D97706", "#7C3AED",
+    "#0891B2", "#DB2777", "#65A30D", "#EA580C", "#6366F1",
+]
 
-SEASON_COLORS = {
-    "Winter": BLUE,
-    "Spring": EMERALD,
-    "Summer": CORAL,
-    "Autumn": AMBER,
-}
-
-MONTH_ORDER = ["Jan","Feb","Mar","Apr","May","Jun",
-               "Jul","Aug","Sep","Oct","Nov","Dec"]
-DAY_ORDER   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-
-# ─────────────────────────────────────────────
-#  SEABORN GLOBAL THEME
-# ─────────────────────────────────────────────
-sns.set_theme(style="darkgrid", rc={
-    "axes.facecolor":       CARD_BG,
-    "figure.facecolor":     BG,
-    "grid.color":           GRID,
-    "grid.linewidth":       0.5,
-    "axes.edgecolor":       GRID,
-    "axes.labelcolor":      TEXT_SUB,
-    "xtick.color":          TEXT_SUB,
-    "ytick.color":          TEXT_SUB,
-    "text.color":           TEXT,
-    "axes.spines.top":      False,
-    "axes.spines.right":    False,
-})
+BACKGROUND  = "#0F172A"   # dark navy
+CARD_BG     = "#1E293B"   # slightly lighter card
+TEXT_COLOR  = "#F1F5F9"
+GRID_COLOR  = "#334155"
+ACCENT      = "#38BDF8"   # sky blue
 
 
-def _title(ax, text):
-    ax.set_title(text, fontsize=12, fontweight="600",
-                 color=TEXT, pad=14, loc="left")
-
-def _labels(ax, xlabel="", ylabel=""):
-    ax.set_xlabel(xlabel, fontsize=10, color=TEXT_SUB, labelpad=7)
-    ax.set_ylabel(ylabel, fontsize=10, color=TEXT_SUB, labelpad=7)
-
-def _legend(ax):
-    leg = ax.get_legend()
-    if leg:
-        leg.get_frame().set_facecolor("#2a2a2a")
-        leg.get_frame().set_edgecolor(GRID)
-        for t in leg.get_texts():
-            t.set_color(TEXT)
-        title = leg.get_title()
-        if title:
-            title.set_color(TEXT_SUB)
-
-def _mw(x, _): return f"{x/1000:.0f}k"
-
-def _empty(msg="No data for selected filters."):
-    fig, ax = plt.subplots(figsize=(8, 4))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(CARD_BG)
-    ax.text(0.5, 0.5, msg, ha="center", va="center",
-            fontsize=11, color=TEXT_SUB, transform=ax.transAxes)
-    ax.axis("off")
-    return fig
-
-
-# ══════════════════════════════════════════════
-# 1. PIE CHART  (matplotlib — seaborn has no pie)
-# ══════════════════════════════════════════════
-def chart_pie(df):
-    if df.empty: return _empty()
-    data = df.groupby("Season")["AEP_MW"].sum()
-    colors = [SEASON_COLORS.get(s) for s in data.index]
-
-    fig, ax = plt.subplots(figsize=(6, 5))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
-    wedges, _, autos = ax.pie(
-        data, labels=None, autopct="%1.1f%%",
-        startangle=140, colors=colors, pctdistance=0.75,
-        wedgeprops=dict(edgecolor=BG, linewidth=3),
+def _base_layout(**kwargs) -> dict:
+    """Return a base Plotly layout dict matching the original dark theme."""
+    layout = dict(
+        paper_bgcolor=BACKGROUND,
+        plot_bgcolor=CARD_BG,
+        font=dict(color=TEXT_COLOR, family="DejaVu Sans", size=11),
+        title_font=dict(color=TEXT_COLOR, size=13, family="DejaVu Sans"),
+        legend=dict(
+            bgcolor=CARD_BG,
+            bordercolor=GRID_COLOR,
+            borderwidth=1,
+            font=dict(color=TEXT_COLOR, size=9),
+        ),
+        xaxis=dict(
+            gridcolor=GRID_COLOR,
+            linecolor=GRID_COLOR,
+            tickfont=dict(color=TEXT_COLOR, size=9),
+            title_font=dict(color=TEXT_COLOR, size=11),
+            zerolinecolor=GRID_COLOR,
+        ),
+        yaxis=dict(
+            gridcolor=GRID_COLOR,
+            linecolor=GRID_COLOR,
+            tickfont=dict(color=TEXT_COLOR, size=9),
+            title_font=dict(color=TEXT_COLOR, size=11),
+            zerolinecolor=GRID_COLOR,
+        ),
+        margin=dict(l=60, r=40, t=60, b=60),
     )
-    for a in autos:
-        a.set_fontsize(10); a.set_fontweight("600"); a.set_color("white")
-    ax.legend(data.index, loc="lower center", ncol=4, fontsize=9,
-              framealpha=0, labelcolor=TEXT, bbox_to_anchor=(0.5, -0.05))
-    _title(ax, "Energy Share by Season")
-    plt.tight_layout()
+    layout.update(kwargs)
+    return layout
+
+
+def _empty_fig(msg: str = "No data available") -> go.Figure:
+    """Return a blank figure with a centred message — mirrors the original ax.text() fallback."""
+    fig = go.Figure()
+    fig.add_annotation(
+        text=msg, xref="paper", yref="paper",
+        x=0.5, y=0.5, showarrow=False,
+        font=dict(color=TEXT_COLOR, size=13),
+    )
+    fig.update_layout(**_base_layout())
     return fig
 
 
-# ══════════════════════════════════════════════
-# 2. HISTOGRAM  — sns.histplot
-# ══════════════════════════════════════════════
-def chart_histogram(df):
-    if df.empty: return _empty()
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.histplot(data=df, x="AEP_MW", bins=55,
-                 color=BLUE, edgecolor=BG, linewidth=0.3,
-                 alpha=0.85, ax=ax)
-    mean_val = df["AEP_MW"].mean()
-    ax.axvline(mean_val, color=AMBER, linewidth=1.8,
-               linestyle="--", label=f"Mean  {mean_val:,.0f} MW")
-    ax.legend(fontsize=9); _legend(ax)
-    _title(ax, "Hourly Consumption — Frequency Distribution")
-    _labels(ax, "Energy (MW)", "Frequency")
-    ax.xaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+# ─────────────────────────────────────────────
+# 1. PIE CHART — Energy mix proportions
+# ─────────────────────────────────────────────
+
+def chart_pie(df: pd.DataFrame, country: str, year: int):
+    """
+    Proportional electricity generation mix for a single country & year.
+    """
+    fuel_vars = ["Coal", "Gas", "Nuclear", "Hydro", "Wind", "Solar",
+                 "Bioenergy", "Other renewables", "Other fossil"]
+    sub = df[
+        (df["Area"] == country) &
+        (df["Year"] == year) &
+        (df["Variable"].isin(fuel_vars)) &
+        (df["Unit"] == "%")
+    ].dropna(subset=["Value"])
+
+    if sub.empty:
+        fig = _empty_fig("No data available")
+        fig.update_layout(title=dict(text=f"Energy Mix — {country} ({year})", x=0.5))
+        return fig
+
+    sub = sub.groupby("Variable")["Value"].sum().reset_index()
+    sub = sub[sub["Value"] > 0].sort_values("Value", ascending=False)
+
+    fig = go.Figure(go.Pie(
+        labels=sub["Variable"],
+        values=sub["Value"],
+        marker=dict(
+            colors=PALETTE[:len(sub)],
+            line=dict(color=BACKGROUND, width=1.5),
+        ),
+        textinfo="label+percent",
+        textfont=dict(size=9, color=TEXT_COLOR),
+        insidetextfont=dict(size=8, color=BACKGROUND),
+        hovertemplate="<b>%{label}</b><br>Share: %{percent}<br>Value: %{value:.1f}%<extra></extra>",
+        rotation=140,
+        pull=[0.02] * len(sub),
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text=f"Electricity Generation Mix — {country} ({year})",
+                x=0.5, font=dict(size=14, color=TEXT_COLOR),
+            ),
+            showlegend=True,
+            legend=dict(
+                bgcolor=CARD_BG, bordercolor=GRID_COLOR, borderwidth=1,
+                font=dict(color=TEXT_COLOR, size=8),
+                orientation="v", x=1.02, y=0.5,
+            ),
+            width=700, height=500,
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 3. LINE CHART  — sns.lineplot
-# ══════════════════════════════════════════════
-def chart_line(df):
-    if df.empty: return _empty()
-    monthly = df.groupby(["Year","Month"])["AEP_MW"].mean().reset_index()
-    monthly["Period"] = pd.to_datetime(
-        monthly[["Year","Month"]].assign(day=1))
-    monthly.sort_values("Period", inplace=True)
+# ─────────────────────────────────────────────
+# 2. HISTOGRAM — CO2 intensity distribution
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.lineplot(data=monthly, x="Period", y="AEP_MW",
-                 color=BLUE, linewidth=1.8, ax=ax)
-    ax.fill_between(monthly["Period"], monthly["AEP_MW"],
-                    alpha=0.08, color=BLUE)
-    _title(ax, "Monthly Average Energy Consumption")
-    _labels(ax, "Date", "Avg MW")
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+def chart_histogram(df: pd.DataFrame):
+    """Frequency distribution of CO2 intensity across countries & years."""
+    sub = df[df["Variable"] == "CO2 intensity"].dropna(subset=["Value"])
+
+    if sub.empty:
+        return _empty_fig("No CO2 intensity data")
+
+    mean_val   = sub["Value"].mean()
+    median_val = sub["Value"].median()
+
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(
+        x=sub["Value"],
+        nbinsx=40,
+        marker=dict(color=ACCENT, line=dict(color=BACKGROUND, width=0.6)),
+        opacity=0.85,
+        name="CO₂ Intensity",
+        hovertemplate="Range: %{x}<br>Count: %{y}<extra></extra>",
+    ))
+    # Mean line — mirrors ax.axvline(..., label=f"Mean: {mean:.0f}")
+    fig.add_vline(
+        x=mean_val, line=dict(color="#F59E0B", dash="dash", width=1.8),
+        annotation_text=f"Mean: {mean_val:.0f}",
+        annotation_font=dict(color="#F59E0B"),
+        annotation_position="top right",
+    )
+    # Median line — mirrors ax.axvline(..., label=f"Median: {median:.0f}")
+    fig.add_vline(
+        x=median_val, line=dict(color="#34D399", dash="dot", width=1.8),
+        annotation_text=f"Median: {median_val:.0f}",
+        annotation_font=dict(color="#34D399"),
+        annotation_position="top left",
+    )
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text="Distribution of CO₂ Intensity Across Countries & Years",
+                x=0.5,
+            ),
+            xaxis=dict(
+                title=dict(text="CO₂ Intensity (gCO₂e per kWh)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text="Frequency", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            bargap=0.05,
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 4. BAR CHART  — sns.barplot
-# ══════════════════════════════════════════════
-def chart_bar(df):
-    if df.empty: return _empty()
-    hourly = df.groupby("Hour")["AEP_MW"].mean().reset_index()
-    hourly.columns = ["Hour","AEP_MW"]
-    peak_h  = hourly.loc[hourly["AEP_MW"].idxmax(), "Hour"]
-    low_h   = hourly.loc[hourly["AEP_MW"].idxmin(), "Hour"]
-    colors  = [CORAL if h == peak_h
-               else EMERALD if h == low_h
-               else BLUE
-               for h in hourly["Hour"]]
+# ─────────────────────────────────────────────
+# 3. LINE CHART — Trend over time
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.barplot(data=hourly, x="Hour", y="AEP_MW",
-                hue="Hour", palette=dict(zip(hourly["Hour"], colors)),
-                legend=False, edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.set_xticks(range(24))
-    ax.set_xticklabels([f"{h:02d}:00" for h in range(24)],
-                       rotation=45, ha="right", fontsize=8)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=CORAL,   label="Peak Hour"),
-        plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Hour"),
-        plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Average Consumption by Hour of Day")
-    _labels(ax, "Hour", "Avg MW")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+def chart_line(df: pd.DataFrame, countries: list, variable: str, unit: str = None):
+    """Line chart of a chosen variable over time for selected countries."""
+    sub = df[(df["Variable"] == variable) & (df["Area"].isin(countries))].copy()
+    if unit:
+        sub = sub[sub["Unit"] == unit]
+    sub = sub.dropna(subset=["Year", "Value"])
+
+    if sub.empty:
+        fig = _empty_fig("No data for selection")
+        fig.update_layout(title=dict(text=f"{variable} — Trend Over Time", x=0.5))
+        return fig
+
+    unit_label = sub["Unit"].iloc[0] if not sub.empty else ""
+
+    fig = go.Figure()
+    for i, country in enumerate(countries):
+        data = sub[sub["Area"] == country].sort_values("Year")
+        if data.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=data["Year"], y=data["Value"],
+            mode="lines+markers",
+            name=country,
+            line=dict(color=PALETTE[i % len(PALETTE)], width=2),
+            marker=dict(size=3),
+            hovertemplate=f"<b>{country}</b><br>Year: %{{x}}<br>{variable}: %{{y:.2f}} {unit_label}<extra></extra>",
+        ))
+
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text=f"{variable} Trend — {', '.join(countries[:5])}",
+                x=0.5,
+            ),
+            xaxis=dict(
+                title=dict(text="Year", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+                dtick=1,
+            ),
+            yaxis=dict(
+                title=dict(text=f"{variable} ({unit_label})", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            hovermode="x unified",
+            legend=dict(
+                bgcolor=CARD_BG, bordercolor=GRID_COLOR, borderwidth=1,
+                font=dict(color=TEXT_COLOR, size=9),
+                orientation="v",
+            ),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 5. SCATTER PLOT  — sns.scatterplot
-# ══════════════════════════════════════════════
-def chart_scatter(df):
-    if df.empty: return _empty()
-    sample = df.sample(min(4000, len(df)), random_state=42)
-    palette = {s: SEASON_COLORS[s] for s in sample["Season"].unique()}
+# ─────────────────────────────────────────────
+# 4. BAR CHART — Country comparison
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.scatterplot(data=sample, x="Hour", y="AEP_MW",
-                    hue="Season", palette=palette,
-                    alpha=0.22, s=10, ax=ax,
-                    hue_order=[s for s in SEASON_COLORS if s in sample["Season"].unique()])
-    _title(ax, "Hour of Day vs Energy — by Season")
-    _labels(ax, "Hour of Day", "Energy (MW)")
-    ax.set_xticks(range(0, 24, 2))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    ax.legend(title="Season", fontsize=9,
-              title_fontsize=9, markerscale=2)
-    _legend(ax)
-    plt.tight_layout()
+def chart_bar(df: pd.DataFrame, variable: str, year: int, top_n: int = 15):
+    """Horizontal bar chart comparing countries for a variable in a given year."""
+    sub = df[
+        (df["Variable"] == variable) &
+        (df["Year"] == year) &
+        df["is_country"]
+    ].dropna(subset=["Value"])
+    sub = sub.groupby("Area")["Value"].mean().nlargest(top_n).reset_index()
+    sub = sub.sort_values("Value")
+
+    if sub.empty:
+        return _empty_fig("No data")
+
+    unit_str = df[df["Variable"] == variable]["Unit"].dropna().iloc[0] \
+        if not df[df["Variable"] == variable].empty else ""
+
+    colors = [PALETTE[i % len(PALETTE)] for i in range(len(sub))]
+
+    fig = go.Figure(go.Bar(
+        x=sub["Value"],
+        y=sub["Area"],
+        orientation="h",
+        marker=dict(color=colors, line=dict(color=BACKGROUND, width=0.5)),
+        text=sub["Value"].round(1),
+        textposition="outside",
+        textfont=dict(color=TEXT_COLOR, size=8),
+        hovertemplate="<b>%{y}</b><br>" + variable + ": %{x:.1f} " + unit_str + "<extra></extra>",
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(text=f"Top {top_n} Countries — {variable} ({year})", x=0.5),
+            xaxis=dict(
+                title=dict(text=f"{variable} ({unit_str})", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            height=max(350, len(sub) * 28),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 6. BOX PLOT  — sns.boxplot
-# ══════════════════════════════════════════════
-def chart_box(df):
-    if df.empty: return _empty()
-    df2 = df.copy()
-    df2["MonthName"] = pd.Categorical(
-        df2["MonthName"], categories=MONTH_ORDER, ordered=True)
-    df2.sort_values("MonthName", inplace=True)
+# ─────────────────────────────────────────────
+# 5. SCATTER PLOT — Two variables relationship
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.boxplot(data=df2, x="MonthName", y="AEP_MW",
-                color=BLUE, linewidth=1.0,
-                medianprops=dict(color=AMBER, linewidth=2),
-                whiskerprops=dict(color=TEXT_SUB),
-                capprops=dict(color=TEXT_SUB),
-                flierprops=dict(marker="o", markersize=2,
-                                alpha=0.25, color=TEXT_SUB),
-                boxprops=dict(alpha=0.6),
-                ax=ax)
-    _title(ax, "Energy Distribution by Month — Box Plot")
-    _labels(ax, "Month", "Energy (MW)")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+def chart_scatter(df: pd.DataFrame, year: int):
+    """Scatter: Renewables % vs CO2 intensity per country."""
+    ren = df[
+        (df["Variable"] == "Renewables") & (df["Unit"] == "%") &
+        (df["Year"] == year) & df["is_country"]
+    ][["Area", "Value"]].rename(columns={"Value": "Renewables_%"})
+
+    co2 = df[
+        (df["Variable"] == "CO2 intensity") &
+        (df["Year"] == year) & df["is_country"]
+    ][["Area", "Value"]].rename(columns={"Value": "CO2_intensity"})
+
+    merged = ren.merge(co2, on="Area").dropna()
+
+    if merged.empty:
+        return _empty_fig("No data for scatter")
+
+    # Trend line — mirrors np.polyfit logic
+    z = np.polyfit(merged["Renewables_%"], merged["CO2_intensity"], 1)
+    p = np.poly1d(z)
+    xs = np.linspace(merged["Renewables_%"].min(), merged["Renewables_%"].max(), 100)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=merged["Renewables_%"], y=merged["CO2_intensity"],
+        mode="markers+text",
+        text=merged["Area"],
+        textposition="top center",
+        textfont=dict(size=7, color=TEXT_COLOR),
+        marker=dict(
+            size=10,
+            color=merged["CO2_intensity"],
+            colorscale="RdYlGn_r",
+            showscale=True,
+            colorbar=dict(
+                title=dict(text="CO₂ Intensity (gCO₂e/kWh)", font=dict(color=TEXT_COLOR)),
+                tickfont=dict(color=TEXT_COLOR),
+            ),
+            line=dict(color=BACKGROUND, width=0.8),
+            opacity=0.9,
+        ),
+        hovertemplate=(
+            "<b>%{text}</b><br>"
+            "Renewables: %{x:.1f}%<br>"
+            "CO₂: %{y:.1f} gCO₂e/kWh<extra></extra>"
+        ),
+        name="Countries",
+    ))
+    # Trend line — dashed yellow, mirrors ax.plot(..., "--", color="#F59E0B")
+    fig.add_trace(go.Scatter(
+        x=xs, y=p(xs),
+        mode="lines",
+        line=dict(color="#F59E0B", dash="dash", width=1.5),
+        name="Trend",
+        hoverinfo="skip",
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(text=f"Renewables vs CO₂ Intensity — {year}", x=0.5),
+            xaxis=dict(
+                title=dict(text="Renewables Share (%)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text="CO₂ Intensity (gCO₂e per kWh)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 7. HEATMAP  — sns.heatmap
-# ══════════════════════════════════════════════
-def chart_heatmap(df):
-    if df.empty or df["Month"].nunique() < 2: return _empty()
-    pivot = df.pivot_table(values="AEP_MW", index="Hour",
-                           columns="Month", aggfunc="mean")
-    pivot.columns = [MONTH_ORDER[c-1] for c in pivot.columns]
+# ─────────────────────────────────────────────
+# 6. BOX PLOT — Distribution per region group
+# ─────────────────────────────────────────────
 
-    cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "modern", ["#0f172a", "#1e3a5f", BLUE,
-                   CYAN, EMERALD, AMBER, CORAL])
-    fig, ax = plt.subplots(figsize=(11, 6))
-    sns.heatmap(pivot, ax=ax, cmap=cmap,
-                linewidths=0.4, linecolor=BG, annot=False,
-                cbar_kws={"label": "Avg MW", "shrink": 0.7})
-    ax.set_facecolor(CARD_BG)
-    fig.patch.set_facecolor(BG)
-    _title(ax, "Avg Energy (MW) — Hour × Month")
-    _labels(ax, "Month", "Hour of Day")
-    ax.tick_params(colors=TEXT_SUB, labelsize=9)
-    cbar = ax.collections[0].colorbar
-    cbar.ax.yaxis.label.set_color(TEXT_SUB)
-    cbar.ax.tick_params(colors=TEXT_SUB)
-    plt.tight_layout()
+def chart_box(df: pd.DataFrame, variable: str):
+    """Box plot of variable distribution by EU membership."""
+    sub = df[
+        (df["Variable"] == variable) & df["is_country"]
+    ].dropna(subset=["Value"]).copy()
+
+    sub["Group"] = sub["EU"].map({1: "EU Member", 0: "Non-EU"})
+
+    if sub.empty:
+        return _empty_fig("No data")
+
+    unit_str = sub["Unit"].dropna().iloc[0] if not sub.empty else ""
+
+    fig = go.Figure()
+    # Mirrors sns.boxplot palette — EU Member = PALETTE[0], Non-EU = PALETTE[2]
+    for group, color in [("EU Member", PALETTE[0]), ("Non-EU", PALETTE[2])]:
+        vals = sub[sub["Group"] == group]["Value"]
+        fig.add_trace(go.Box(
+            y=vals,
+            name=group,
+            marker=dict(color=color, outliercolor=ACCENT, size=4),
+            line=dict(color=color),
+            boxmean="sd",
+            hovertemplate=f"<b>{group}</b><br>Value: %{{y:.1f}} {unit_str}<extra></extra>",
+        ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text=f"{variable} — EU vs Non-EU Distribution (All Years)", x=0.5,
+            ),
+            xaxis=dict(
+                title=dict(text="Country Group", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text=f"{variable} ({unit_str})", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 8. AREA CHART  — sns.lineplot + fill
-# ══════════════════════════════════════════════
-def chart_area(df):
-    if df.empty: return _empty()
-    daily = df.groupby("Date")["AEP_MW"].mean().reset_index()
-    daily["Date"]   = pd.to_datetime(daily["Date"])
-    daily.sort_values("Date", inplace=True)
-    daily["Roll7"]  = daily["AEP_MW"].rolling(7,  min_periods=1).mean()
-    daily["Roll30"] = daily["AEP_MW"].rolling(30, min_periods=1).mean()
+# ─────────────────────────────────────────────
+# 7. HEATMAP — Correlation matrix
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    ax.fill_between(daily["Date"], daily["AEP_MW"],
-                    alpha=0.07, color=CYAN)
-    sns.lineplot(data=daily, x="Date", y="AEP_MW",
-                 color=CYAN, linewidth=0.6, alpha=0.4,
-                 label="Daily Avg", ax=ax)
-    sns.lineplot(data=daily, x="Date", y="Roll7",
-                 color=AMBER, linewidth=1.8,
-                 label="7-Day Avg", ax=ax)
-    sns.lineplot(data=daily, x="Date", y="Roll30",
-                 color=VIOLET, linewidth=2.2,
-                 linestyle="--", label="30-Day Avg", ax=ax)
-    _title(ax, "Daily Consumption with Rolling Averages")
-    _labels(ax, "Date", "Energy (MW)")
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    ax.legend(fontsize=9); _legend(ax)
-    plt.tight_layout()
+def chart_heatmap(df: pd.DataFrame, year: int):
+    """
+    Correlation heatmap of key electricity variables across countries for a year.
+    """
+    key_vars = ["Demand", "Renewables", "Fossil", "Nuclear",
+                "CO2 intensity", "Solar", "Wind", "Hydro"]
+    sub = df[
+        (df["Year"] == year) & df["is_country"] &
+        (df["Variable"].isin(key_vars))
+    ].dropna(subset=["Value"])
+
+    pivot = sub.pivot_table(index="Area", columns="Variable", values="Value", aggfunc="mean")
+    pivot = pivot.dropna(thresh=3)
+
+    if pivot.empty or pivot.shape[1] < 2:
+        return _empty_fig("Not enough data for heatmap")
+
+    corr = pivot.corr()
+    # mask — mirrors np.triu: keep only lower triangle
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+    corr_masked = corr.where(~mask).round(2)
+
+    fig = go.Figure(go.Heatmap(
+        z=corr_masked.values,
+        x=corr_masked.columns.tolist(),
+        y=corr_masked.index.tolist(),
+        colorscale="RdBu",
+        zmid=0,
+        text=corr_masked.values.round(2),
+        texttemplate="%{text}",
+        textfont=dict(size=9, color=TEXT_COLOR),
+        hovertemplate="<b>%{y} × %{x}</b><br>r = %{z:.2f}<extra></extra>",
+        colorbar=dict(
+            tickfont=dict(color=TEXT_COLOR),
+            title=dict(text="r", font=dict(color=TEXT_COLOR)),
+        ),
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text=f"Correlation Matrix of Electricity Variables ({year})",
+                x=0.5,
+            ),
+            xaxis=dict(
+                tickangle=30,
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                autorange="reversed",
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            height=500,
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 9. COUNT PLOT  — sns.countplot
-# ══════════════════════════════════════════════
-def chart_count(df):
-    if df.empty: return _empty()
-    df2 = df.copy()
-    df2["DayName"] = pd.Categorical(
-        df2["DayName"], categories=DAY_ORDER, ordered=True)
-    day_palette = {d: VIOLET if d in {"Sat","Sun"} else BLUE
-                   for d in DAY_ORDER}
+# ─────────────────────────────────────────────
+# 8. AREA CHART — Cumulative trends
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.countplot(data=df2, x="DayName", order=DAY_ORDER,
-                  hue="DayName", palette=day_palette, legend=False,
-                  edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=BLUE,   label="Weekday"),
-        plt.Rectangle((0,0),1,1, color=VIOLET, label="Weekend"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Record Count by Day of Week")
-    _labels(ax, "Day", "Records")
-    plt.tight_layout()
+def chart_area(df: pd.DataFrame, countries: list, variable: str = "Renewables"):
+    """
+    Stacked area chart showing cumulative variable over time for top countries.
+    """
+    sub = df[
+        (df["Variable"] == variable) &
+        (df["Unit"] == "%") &
+        (df["Area"].isin(countries)) &
+        df["is_country"]
+    ].dropna(subset=["Year", "Value"])
+
+    pivot = sub.pivot_table(index="Year", columns="Area", values="Value", aggfunc="mean")
+    pivot = pivot.sort_index().ffill().fillna(0)
+
+    if pivot.empty:
+        return _empty_fig("No data for area chart")
+
+    cols = pivot.columns.tolist()[:10]
+
+    fig = go.Figure()
+    for i, col in enumerate(cols):
+        hex_c = PALETTE[i % len(PALETTE)].lstrip("#")
+        r, g, b = int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)
+        fig.add_trace(go.Scatter(
+            x=pivot.index.tolist(),
+            y=pivot[col].tolist(),
+            mode="lines",
+            name=col,
+            # alpha=0.35 mirrors plot.area(alpha=0.35)
+            fill="tozeroy",
+            fillcolor=f"rgba({r},{g},{b},0.35)",
+            line=dict(color=PALETTE[i % len(PALETTE)], width=1.5),
+            hovertemplate=f"<b>{col}</b><br>Year: %{{x}}<br>{variable}: %{{y:.1f}}%<extra></extra>",
+        ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(text=f"{variable} Share Over Time — Selected Countries", x=0.5),
+            xaxis=dict(
+                title=dict(text="Year", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+                dtick=1,
+            ),
+            yaxis=dict(
+                title=dict(text=f"{variable} (%)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            hovermode="x unified",
+            legend=dict(
+                bgcolor=CARD_BG, bordercolor=GRID_COLOR, borderwidth=1,
+                font=dict(color=TEXT_COLOR, size=8),
+                orientation="h", x=0, y=1.05,
+            ),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# 10. VIOLIN PLOT  — sns.violinplot
-# ══════════════════════════════════════════════
-def chart_violin(df):
-    if df.empty: return _empty()
-    season_order = [s for s in ["Winter","Spring","Summer","Autumn"]
-                    if s in df["Season"].unique()]
-    palette = {s: SEASON_COLORS[s] for s in season_order}
+# ─────────────────────────────────────────────
+# 9. COUNT PLOT — Frequency of categorical data
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.violinplot(data=df, x="Season", y="AEP_MW",
-                   order=season_order, palette=palette,
-                   hue="Season", legend=False,
-                   inner="box", linewidth=1.0,
-                   alpha=0.75, cut=0, ax=ax)
-    _title(ax, "Energy Distribution by Season")
-    _labels(ax, "Season", "Energy (MW)")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+def chart_count(df: pd.DataFrame):
+    """Count plot: number of data entries per Category."""
+    sub = df[df["is_country"]].copy()
+
+    if sub.empty:
+        return _empty_fig("No data")
+
+    # Mirrors sns.countplot with value_counts order
+    order  = sub["Category"].value_counts().index.tolist()
+    counts = sub["Category"].value_counts().reindex(order).reset_index()
+    counts.columns = ["Category", "Count"]
+
+    colors = [PALETTE[i % len(PALETTE)] for i in range(len(counts))]
+
+    fig = go.Figure(go.Bar(
+        x=counts["Category"],
+        y=counts["Count"],
+        marker=dict(color=colors, line=dict(color=BACKGROUND, width=0.5)),
+        text=counts["Count"].apply(lambda v: f"{v:,}"),
+        textposition="outside",
+        textfont=dict(color=TEXT_COLOR, size=9),
+        hovertemplate="<b>%{x}</b><br>Records: %{y:,}<extra></extra>",
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(text="Record Count by Electricity Data Category", x=0.5),
+            xaxis=dict(
+                title=dict(text="Data Category", font=dict(color=TEXT_COLOR, size=11)),
+                tickangle=15,
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text="Number of Records", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+        )
+    )
     return fig
 
 
-# ══════════════════════════════════════════════
-# BONUS — YEAR-OVER-YEAR  — sns.barplot
-# ══════════════════════════════════════════════
-def chart_yearly_avg(df):
-    if df.empty: return _empty()
-    yearly = df.groupby("Year")["AEP_MW"].mean().reset_index()
-    peak_y = yearly.loc[yearly["AEP_MW"].idxmax(), "Year"]
-    low_y  = yearly.loc[yearly["AEP_MW"].idxmin(), "Year"]
-    colors = [CORAL   if y == peak_y
-              else EMERALD if y == low_y
-              else BLUE
-              for y in yearly["Year"]]
+# ─────────────────────────────────────────────
+# 10. VIOLIN PLOT — Distribution & density
+# ─────────────────────────────────────────────
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    yearly["YearStr"] = yearly["Year"].astype(str)
-    color_map = dict(zip(yearly["YearStr"], colors))
-    sns.barplot(data=yearly, x="YearStr", y="AEP_MW",
-                hue="YearStr", palette=color_map, legend=False,
-                edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=9)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=CORAL,   label="Highest Year"),
-        plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Year"),
-        plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Average Annual Energy Consumption")
-    _labels(ax, "Year", "Avg MW")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+def chart_violin(df: pd.DataFrame, variable: str):
+    """Violin plot of a variable across decades."""
+    sub = df[
+        (df["Variable"] == variable) & df["is_country"]
+    ].dropna(subset=["Year", "Value"]).copy()
+
+    sub["Decade"] = (sub["Year"] // 10 * 10).astype(str) + "s"
+
+    if sub.empty or sub["Decade"].nunique() < 2:
+        return _empty_fig("Not enough data for violin")
+
+    unit_str     = sub["Unit"].dropna().iloc[0] if not sub.empty else ""
+    decade_order = sorted(sub["Decade"].unique())
+
+    fig = go.Figure()
+    for i, decade in enumerate(decade_order):
+        vals = sub[sub["Decade"] == decade]["Value"]
+        # inner="quartile" mirrors sns.violinplot(inner="quartile")
+        fig.add_trace(go.Violin(
+            y=vals,
+            name=decade,
+            box_visible=True,
+            meanline_visible=True,
+            fillcolor=PALETTE[i % len(PALETTE)],
+            line_color=PALETTE[i % len(PALETTE)],
+            opacity=0.75,
+            hovertemplate=f"<b>{decade}</b><br>Value: %{{y:.1f}} {unit_str}<extra></extra>",
+        ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(text=f"{variable} Distribution by Decade", x=0.5),
+            xaxis=dict(
+                title=dict(text="Decade", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text=f"{variable} ({unit_str})", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            violinmode="overlay",
+        )
+    )
+    return fig
+
+
+# ─────────────────────────────────────────────
+# BONUS — BUBBLE CHART
+# ─────────────────────────────────────────────
+
+def chart_bubble(df: pd.DataFrame, year: int):
+    """
+    Bubble chart: Renewables (x) vs CO2 (y) with bubble size = Demand.
+    """
+    ren = df[(df["Variable"] == "Renewables") & (df["Unit"] == "%") &
+             (df["Year"] == year) & df["is_country"]
+             ][["Area", "Value"]].rename(columns={"Value": "Ren"})
+    co2 = df[(df["Variable"] == "CO2 intensity") & (df["Year"] == year) &
+             df["is_country"]
+             ][["Area", "Value"]].rename(columns={"Value": "CO2"})
+    dem = df[(df["Variable"] == "Demand") & (df["Year"] == year) &
+             df["is_country"]
+             ][["Area", "Value"]].rename(columns={"Value": "Demand"})
+
+    merged = ren.merge(co2, on="Area").merge(dem, on="Area").dropna()
+
+    if merged.empty:
+        return _empty_fig("No data")
+
+    # Mirrors original: sizes = (Demand / max) * 1500 + 100  → scaled to Plotly marker px
+    sizes = (merged["Demand"] / merged["Demand"].max()) * 60 + 10
+
+    fig = go.Figure(go.Scatter(
+        x=merged["Ren"],
+        y=merged["CO2"],
+        mode="markers+text",
+        text=merged["Area"],
+        textposition="top center",
+        textfont=dict(size=7, color=TEXT_COLOR),
+        marker=dict(
+            size=sizes,
+            color=merged["CO2"],
+            colorscale="RdYlGn_r",
+            showscale=True,
+            colorbar=dict(
+                title=dict(text="CO₂ Intensity (gCO₂e/kWh)", font=dict(color=TEXT_COLOR)),
+                tickfont=dict(color=TEXT_COLOR),
+            ),
+            line=dict(color=TEXT_COLOR, width=0.6),
+            opacity=0.85,
+        ),
+        hovertemplate=(
+            "<b>%{text}</b><br>"
+            "Renewables: %{x:.1f}%<br>"
+            "CO₂: %{y:.1f} gCO₂e/kWh<br>"
+            "Demand (scaled): %{marker.size:.1f}<extra></extra>"
+        ),
+    ))
+    fig.update_layout(
+        **_base_layout(
+            title=dict(
+                text=f"Bubble Chart — Renewables vs CO₂ (bubble = Demand) [{year}]",
+                x=0.5,
+            ),
+            xaxis=dict(
+                title=dict(text="Renewables Share (%)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+            yaxis=dict(
+                title=dict(text="CO₂ Intensity (gCO₂e per kWh)", font=dict(color=TEXT_COLOR, size=11)),
+                gridcolor=GRID_COLOR, linecolor=GRID_COLOR,
+                tickfont=dict(color=TEXT_COLOR, size=9),
+            ),
+        )
+    )
     return fig
