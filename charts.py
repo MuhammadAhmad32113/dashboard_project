@@ -56,10 +56,9 @@ sns.set_theme(style="darkgrid", rc={
     "axes.spines.right":    False,
 })
 
-
+# Note: Internal title rendering has been disabled so titles can be managed by the dashboard layout.
 def _title(ax, text):
-    ax.set_title(text, fontsize=12, fontweight="600",
-                 color=TEXT, pad=14, loc="left")
+    pass 
 
 def _labels(ax, xlabel="", ylabel=""):
     ax.set_xlabel(xlabel, fontsize=10, color=TEXT_SUB, labelpad=7)
