@@ -56,9 +56,10 @@ sns.set_theme(style="darkgrid", rc={
     "axes.spines.right":    False,
 })
 
-# Note: Internal title rendering has been disabled so titles can be managed by the dashboard layout.
+
 def _title(ax, text):
-    pass 
+    ax.set_title(text, fontsize=12, fontweight="600",
+                 color=TEXT, pad=14, loc="left")
 
 def _labels(ax, xlabel="", ylabel=""):
     ax.set_xlabel(xlabel, fontsize=10, color=TEXT_SUB, labelpad=7)
@@ -107,7 +108,7 @@ def chart_pie(df):
         a.set_fontsize(10); a.set_fontweight("600"); a.set_color("white")
     ax.legend(data.index, loc="lower center", ncol=4, fontsize=9,
               framealpha=0, labelcolor=TEXT, bbox_to_anchor=(0.5, -0.05))
-    _title(ax, "Energy Share by Season")
+    _title(ax, "Pie Chart: Energy Share by Season")
     plt.tight_layout()
     return fig
 
@@ -125,7 +126,7 @@ def chart_histogram(df):
     ax.axvline(mean_val, color=AMBER, linewidth=1.8,
                linestyle="--", label=f"Mean  {mean_val:,.0f} MW")
     ax.legend(fontsize=9); _legend(ax)
-    _title(ax, "Hourly Consumption — Frequency Distribution")
+    _title(ax, "Histogram: Hourly Consumption — Frequency Distribution")
     _labels(ax, "Energy (MW)", "Frequency")
     ax.xaxis.set_major_formatter(FuncFormatter(_mw))
     plt.tight_layout()
@@ -147,7 +148,7 @@ def chart_line(df):
                  color=BLUE, linewidth=1.8, ax=ax)
     ax.fill_between(monthly["Period"], monthly["AEP_MW"],
                     alpha=0.08, color=BLUE)
-    _title(ax, "Monthly Average Energy Consumption")
+    _title(ax, "Line Chart: Monthly Average Energy Consumption")
     _labels(ax, "Date", "Avg MW")
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
@@ -182,7 +183,7 @@ def chart_bar(df):
         plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Hour"),
         plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
     ], fontsize=9); _legend(ax)
-    _title(ax, "Average Consumption by Hour of Day")
+    _title(ax, "Bar Chart: Average Consumption by Hour of Day")
     _labels(ax, "Hour", "Avg MW")
     ax.yaxis.set_major_formatter(FuncFormatter(_mw))
     plt.tight_layout()
@@ -202,7 +203,7 @@ def chart_scatter(df):
                     hue="Season", palette=palette,
                     alpha=0.22, s=10, ax=ax,
                     hue_order=[s for s in SEASON_COLORS if s in sample["Season"].unique()])
-    _title(ax, "Hour of Day vs Energy — by Season")
+    _title(ax, "Scatter Plot: Hour of Day vs Energy — by Season")
     _labels(ax, "Hour of Day", "Energy (MW)")
     ax.set_xticks(range(0, 24, 2))
     ax.yaxis.set_major_formatter(FuncFormatter(_mw))
@@ -233,7 +234,7 @@ def chart_box(df):
                                 alpha=0.25, color=TEXT_SUB),
                 boxprops=dict(alpha=0.6),
                 ax=ax)
-    _title(ax, "Energy Distribution by Month — Box Plot")
+    _title(ax, "Box Plot: Energy Distribution by Month")
     _labels(ax, "Month", "Energy (MW)")
     ax.yaxis.set_major_formatter(FuncFormatter(_mw))
     plt.tight_layout()
@@ -258,7 +259,7 @@ def chart_heatmap(df):
                 cbar_kws={"label": "Avg MW", "shrink": 0.7})
     ax.set_facecolor(CARD_BG)
     fig.patch.set_facecolor(BG)
-    _title(ax, "Avg Energy (MW) — Hour × Month")
+    _title(ax, "Heatmap: Avg Energy (MW) — Hour × Month")
     _labels(ax, "Month", "Hour of Day")
     ax.tick_params(colors=TEXT_SUB, labelsize=9)
     cbar = ax.collections[0].colorbar
@@ -291,7 +292,7 @@ def chart_area(df):
     sns.lineplot(data=daily, x="Date", y="Roll30",
                  color=VIOLET, linewidth=2.2,
                  linestyle="--", label="30-Day Avg", ax=ax)
-    _title(ax, "Daily Consumption with Rolling Averages")
+    _title(ax, "Area Chart: Daily Consumption with Rolling Averages")
     _labels(ax, "Date", "Energy (MW)")
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
@@ -320,7 +321,7 @@ def chart_count(df):
         plt.Rectangle((0,0),1,1, color=BLUE,   label="Weekday"),
         plt.Rectangle((0,0),1,1, color=VIOLET, label="Weekend"),
     ], fontsize=9); _legend(ax)
-    _title(ax, "Record Count by Day of Week")
+    _title(ax, "Count Plot: Record Count by Day of Week")
     _labels(ax, "Day", "Records")
     plt.tight_layout()
     return fig
@@ -341,7 +342,7 @@ def chart_violin(df):
                    hue="Season", legend=False,
                    inner="box", linewidth=1.0,
                    alpha=0.75, cut=0, ax=ax)
-    _title(ax, "Energy Distribution by Season")
+    _title(ax, "Violin Plot: Energy Distribution by Season")
     _labels(ax, "Season", "Energy (MW)")
     ax.yaxis.set_major_formatter(FuncFormatter(_mw))
     plt.tight_layout()
@@ -374,7 +375,7 @@ def chart_yearly_avg(df):
         plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Year"),
         plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
     ], fontsize=9); _legend(ax)
-    _title(ax, "Average Annual Energy Consumption")
+    _title(ax, "Bar Chart (Bonus): Average Annual Energy Consumption")
     _labels(ax, "Year", "Avg MW")
     ax.yaxis.set_major_formatter(FuncFormatter(_mw))
     plt.tight_layout()
