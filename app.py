@@ -3,7 +3,7 @@ app.py  —  AEP Energy Consumption Dashboard
 Course : Exploratory Data Analysis
 """
 
-import gradio as gr
+import streamlit as st
 import pandas as pd
 
 from filters import load_and_clean, apply_filters, compute_kpis
