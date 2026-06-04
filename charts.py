@@ -1,6 +1,6 @@
 """
 charts.py  —  AEP Energy Dashboard
-Same colors + dark theme, fully upgraded to Plotly for interactive downloads.
+Same colors + dark theme, completely upgraded to Plotly for interactive downloads.
 """
 
 import pandas as pd
@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  SAME EXACT PALETTE CONFIGURATION
+#  EXACT SAME COLOR PALETTE CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
 BG        = "#0d1c2d"
 CARD_BG   = "#122131"
@@ -48,7 +48,7 @@ CHART_CONFIG = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  GLOBAL PLOTLY THEME APPLIER (Replaces Seaborn Global Theme)
+#  GLOBAL PLOTLY THEME APPLIER (Preserves Dark Theme Layout)
 # ─────────────────────────────────────────────────────────────────────────────
 def _apply_theme(fig, title_text="", xlabel="", ylabel="", show_legend=True):
     """Applies your exact dashboard visual theme to any Plotly figure."""
@@ -80,7 +80,7 @@ def _apply_theme(fig, title_text="", xlabel="", ylabel="", show_legend=True):
             showgrid=True,
             linecolor=GRID,
             zeroline=False,
-            tickformat="~s" # Automatically styles thousands to "k" format natively
+            tickformat="~s"
         ),
         legend=dict(
             bgcolor=CARD_BG,
@@ -272,14 +272,12 @@ def chart_area(df):
 
     fig = go.Figure()
     
-    # Area background for Daily Avg
     fig.add_trace(go.Scatter(
         x=daily["Date"], y=daily["AEP_MW"], name="Daily Avg",
         line=dict(color=CYAN, width=0.6), opacity=0.4,
         fill='tozeroy', fillcolor="rgba(6, 182, 212, 0.07)"
     ))
     
-    # Rolling averages lines
     fig.add_trace(go.Scatter(x=daily["Date"], y=daily["Roll7"], name="7-Day Avg", line=dict(color=AMBER, width=1.8)))
     fig.add_trace(go.Scatter(x=daily["Date"], y=daily["Roll30"], name="30-Day Avg", line=dict(color=VIOLET, width=2.2, dash="dash")))
     
