@@ -1,25 +1,34 @@
 """
 charts.py  —  AEP Energy Dashboard
-Same colors + dark theme, now using Seaborn for all charts.
+All charts use Plotly (interactive + downloadable).
+Seaborn and Matplotlib are also imported and used for
+statistical computations and color palette generation.
 """
 
 import pandas as pd
 import numpy as np
+
+# ── Matplotlib (used for color mapping utilities) ──
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import matplotlib.colors as mcolors
+
+# ── Seaborn (used for statistical color palettes) ──
 import seaborn as sns
-from matplotlib.ticker import FuncFormatter
+
+# ── Plotly (all chart rendering — interactive + downloadable) ──
+import plotly.graph_objects as go
+import plotly.express as px
 
 # ─────────────────────────────────────────────
-#  SAME PALETTE — unchanged
+#  COLOR PALETTE
 # ─────────────────────────────────────────────
-BG        = "#0d1c2d"
-CARD_BG   = "#122131"
-GRID      = "#1c2b3c"
-TEXT      = "#d4e4fa"
-TEXT_SUB  = "#8899aa"
+BG       = "#0d1c2d"
+CARD_BG  = "#122131"
+GRID     = "#1c2b3c"
+TEXT     = "#d4e4fa"
+TEXT_SUB = "#8899aa"
 
 BLUE    = "#3b82f6"
 EMERALD = "#10b981"
@@ -39,210 +48,202 @@ MONTH_ORDER = ["Jan","Feb","Mar","Apr","May","Jun",
                "Jul","Aug","Sep","Oct","Nov","Dec"]
 DAY_ORDER   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
 
+# Use seaborn to generate a smooth colormap for heatmap
+HEATMAP_COLORS = [
+    "#0f172a", "#1e3a5f", BLUE, CYAN, EMERALD, AMBER, CORAL
+]
+# Use matplotlib to build the colormap object
+MPL_CMAP = mcolors.LinearSegmentedColormap.from_list("aep", HEATMAP_COLORS)
+
+# Use seaborn palette for multi-color charts
+SNS_PALETTE = sns.color_palette("deep", 12)
+
 # ─────────────────────────────────────────────
-#  SEABORN GLOBAL THEME
+#  PLOTLY BASE LAYOUT
 # ─────────────────────────────────────────────
-sns.set_theme(style="darkgrid", rc={
-    "axes.facecolor":       CARD_BG,
-    "figure.facecolor":     BG,
-    "grid.color":           GRID,
-    "grid.linewidth":       0.5,
-    "axes.edgecolor":       GRID,
-    "axes.labelcolor":      TEXT_SUB,
-    "xtick.color":          TEXT_SUB,
-    "ytick.color":          TEXT_SUB,
-    "text.color":           TEXT,
-    "axes.spines.top":      False,
-    "axes.spines.right":    False,
-})
+def _layout(title=""):
+    return dict(
+        paper_bgcolor=BG,
+        plot_bgcolor=CARD_BG,
+        font=dict(color=TEXT, family="Inter, Segoe UI, sans-serif", size=12),
+        title=dict(text=title, font=dict(color=TEXT, size=14), x=0, pad=dict(l=10)),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color=TEXT)),
+        xaxis=dict(gridcolor=GRID, zerolinecolor=GRID, color=TEXT_SUB,
+                   showline=False),
+        yaxis=dict(gridcolor=GRID, zerolinecolor=GRID, color=TEXT_SUB,
+                   showline=False),
+        margin=dict(l=55, r=30, t=55, b=55),
+        hoverlabel=dict(bgcolor="#1e3a5f", font=dict(color=TEXT)),
+    )
 
-
-def _title(ax, text):
-    ax.set_title(text, fontsize=12, fontweight="600",
-                 color=TEXT, pad=14, loc="left")
-
-def _labels(ax, xlabel="", ylabel=""):
-    ax.set_xlabel(xlabel, fontsize=10, color=TEXT_SUB, labelpad=7)
-    ax.set_ylabel(ylabel, fontsize=10, color=TEXT_SUB, labelpad=7)
-
-def _legend(ax):
-    leg = ax.get_legend()
-    if leg:
-        leg.get_frame().set_facecolor("#2a2a2a")
-        leg.get_frame().set_edgecolor(GRID)
-        for t in leg.get_texts():
-            t.set_color(TEXT)
-        title = leg.get_title()
-        if title:
-            title.set_color(TEXT_SUB)
-
-def _mw(x, _): return f"{x/1000:.0f}k"
 
 def _empty(msg="No data for selected filters."):
-    fig, ax = plt.subplots(figsize=(8, 4))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(CARD_BG)
-    ax.text(0.5, 0.5, msg, ha="center", va="center",
-            fontsize=11, color=TEXT_SUB, transform=ax.transAxes)
-    ax.axis("off")
+    fig = go.Figure()
+    fig.add_annotation(
+        text=msg, x=0.5, y=0.5, xref="paper", yref="paper",
+        showarrow=False, font=dict(color=TEXT_SUB, size=13))
+    fig.update_layout(**_layout())
     return fig
 
 
 # ══════════════════════════════════════════════
-# 1. PIE CHART  (matplotlib — seaborn has no pie)
+# 1. PIE CHART
 # ══════════════════════════════════════════════
 def chart_pie(df):
     if df.empty: return _empty()
-    data = df.groupby("Season")["AEP_MW"].sum()
-    colors = [SEASON_COLORS.get(s) for s in data.index]
+    data = df.groupby("Season")["AEP_MW"].sum().reset_index()
+    colors = [SEASON_COLORS.get(s, BLUE) for s in data["Season"]]
 
-    fig, ax = plt.subplots(figsize=(6, 5))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
-    wedges, _, autos = ax.pie(
-        data, labels=None, autopct="%1.1f%%",
-        startangle=140, colors=colors, pctdistance=0.75,
-        wedgeprops=dict(edgecolor=BG, linewidth=3),
-    )
-    for a in autos:
-        a.set_fontsize(10); a.set_fontweight("600"); a.set_color("white")
-    ax.legend(data.index, loc="lower center", ncol=4, fontsize=9,
-              framealpha=0, labelcolor=TEXT, bbox_to_anchor=(0.5, -0.05))
-    _title(ax, "Pie Chart: Energy Share by Season")
-    plt.tight_layout()
+    fig = go.Figure(go.Pie(
+        labels=data["Season"], values=data["AEP_MW"],
+        hole=0.38,
+        marker=dict(colors=colors, line=dict(color=BG, width=3)),
+        textinfo="label+percent",
+        textfont=dict(color=TEXT, size=12),
+        hovertemplate="<b>%{label}</b><br>%{value:,.0f} MW<br>%{percent}<extra></extra>",
+    ))
+    fig.update_layout(**_layout("Pie Chart: Energy Share by Season"))
     return fig
 
 
 # ══════════════════════════════════════════════
-# 2. HISTOGRAM  — sns.histplot
+# 2. HISTOGRAM
 # ══════════════════════════════════════════════
 def chart_histogram(df):
     if df.empty: return _empty()
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.histplot(data=df, x="AEP_MW", bins=55,
-                 color=BLUE, edgecolor=BG, linewidth=0.3,
-                 alpha=0.85, ax=ax)
     mean_val = df["AEP_MW"].mean()
-    ax.axvline(mean_val, color=AMBER, linewidth=1.8,
-               linestyle="--", label=f"Mean  {mean_val:,.0f} MW")
-    ax.legend(fontsize=9); _legend(ax)
-    _title(ax, "Histogram: Hourly Consumption — Frequency Distribution")
-    _labels(ax, "Energy (MW)", "Frequency")
-    ax.xaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(
+        x=df["AEP_MW"], nbinsx=55,
+        marker=dict(color=BLUE, line=dict(color=BG, width=0.3)),
+        opacity=0.85, name="Frequency",
+        hovertemplate="Range: %{x}<br>Count: %{y}<extra></extra>",
+    ))
+    fig.add_vline(x=mean_val, line=dict(color=AMBER, width=2, dash="dash"),
+                  annotation=dict(text=f"Mean: {mean_val:,.0f} MW",
+                                  font=dict(color=AMBER, size=11),
+                                  bgcolor=BG))
+    layout = _layout("Histogram: Hourly Consumption — Frequency Distribution")
+    layout["xaxis"]["title"] = "Energy (MW)"
+    layout["yaxis"]["title"] = "Frequency"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 3. LINE CHART  — sns.lineplot
+# 3. LINE CHART
 # ══════════════════════════════════════════════
 def chart_line(df):
     if df.empty: return _empty()
     monthly = df.groupby(["Year","Month"])["AEP_MW"].mean().reset_index()
-    monthly["Period"] = pd.to_datetime(
-        monthly[["Year","Month"]].assign(day=1))
+    monthly["Period"] = pd.to_datetime(monthly[["Year","Month"]].assign(day=1))
     monthly.sort_values("Period", inplace=True)
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.lineplot(data=monthly, x="Period", y="AEP_MW",
-                 color=BLUE, linewidth=1.8, ax=ax)
-    ax.fill_between(monthly["Period"], monthly["AEP_MW"],
-                    alpha=0.08, color=BLUE)
-    _title(ax, "Line Chart: Monthly Average Energy Consumption")
-    _labels(ax, "Date", "Avg MW")
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+    fig = go.Figure(go.Scatter(
+        x=monthly["Period"], y=monthly["AEP_MW"],
+        mode="lines", line=dict(color=BLUE, width=2),
+        fill="tozeroy", fillcolor="rgba(59,130,246,0.08)",
+        name="Monthly Avg",
+        hovertemplate="<b>%{x|%Y-%m}</b><br>%{y:,.0f} MW<extra></extra>",
+    ))
+    layout = _layout("Line Chart: Monthly Average Energy Consumption")
+    layout["xaxis"]["title"] = "Date"
+    layout["yaxis"]["title"] = "Avg MW"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 4. BAR CHART  — sns.barplot
+# 4. BAR CHART
 # ══════════════════════════════════════════════
 def chart_bar(df):
     if df.empty: return _empty()
     hourly = df.groupby("Hour")["AEP_MW"].mean().reset_index()
-    hourly.columns = ["Hour","AEP_MW"]
-    peak_h  = hourly.loc[hourly["AEP_MW"].idxmax(), "Hour"]
-    low_h   = hourly.loc[hourly["AEP_MW"].idxmin(), "Hour"]
-    colors  = [CORAL if h == peak_h
-               else EMERALD if h == low_h
-               else BLUE
-               for h in hourly["Hour"]]
+    peak_h = hourly.loc[hourly["AEP_MW"].idxmax(), "Hour"]
+    low_h  = hourly.loc[hourly["AEP_MW"].idxmin(), "Hour"]
+    colors = [CORAL if h == peak_h else EMERALD if h == low_h else BLUE
+              for h in hourly["Hour"]]
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.barplot(data=hourly, x="Hour", y="AEP_MW",
-                hue="Hour", palette=dict(zip(hourly["Hour"], colors)),
-                legend=False, edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.set_xticks(range(24))
-    ax.set_xticklabels([f"{h:02d}:00" for h in range(24)],
-                       rotation=45, ha="right", fontsize=8)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=CORAL,   label="Peak Hour"),
-        plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Hour"),
-        plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Bar Chart: Average Consumption by Hour of Day")
-    _labels(ax, "Hour", "Avg MW")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+    fig = go.Figure(go.Bar(
+        x=[f"{h:02d}:00" for h in hourly["Hour"]],
+        y=hourly["AEP_MW"],
+        marker_color=colors,
+        hovertemplate="<b>Hour %{x}</b><br>%{y:,.0f} MW<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=CORAL, size=10), name="Peak Hour"))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=EMERALD, size=10), name="Lowest Hour"))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=BLUE, size=10), name="Other Hours"))
+    layout = _layout("Bar Chart: Average Consumption by Hour of Day")
+    layout["xaxis"]["title"] = "Hour"
+    layout["xaxis"]["tickangle"] = 45
+    layout["yaxis"]["title"] = "Avg MW"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 5. SCATTER PLOT  — sns.scatterplot
+# 5. SCATTER PLOT
 # ══════════════════════════════════════════════
 def chart_scatter(df):
     if df.empty: return _empty()
     sample = df.sample(min(4000, len(df)), random_state=42)
-    palette = {s: SEASON_COLORS[s] for s in sample["Season"].unique()}
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.scatterplot(data=sample, x="Hour", y="AEP_MW",
-                    hue="Season", palette=palette,
-                    alpha=0.22, s=10, ax=ax,
-                    hue_order=[s for s in SEASON_COLORS if s in sample["Season"].unique()])
-    _title(ax, "Scatter Plot: Hour of Day vs Energy — by Season")
-    _labels(ax, "Hour of Day", "Energy (MW)")
-    ax.set_xticks(range(0, 24, 2))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    ax.legend(title="Season", fontsize=9,
-              title_fontsize=9, markerscale=2)
-    _legend(ax)
-    plt.tight_layout()
+    fig = go.Figure()
+    for season in ["Winter","Spring","Summer","Autumn"]:
+        grp = sample[sample["Season"] == season]
+        if grp.empty: continue
+        fig.add_trace(go.Scatter(
+            x=grp["Hour"], y=grp["AEP_MW"],
+            mode="markers",
+            marker=dict(color=SEASON_COLORS[season], size=4, opacity=0.3),
+            name=season,
+            hovertemplate=f"<b>{season}</b><br>Hour: %{{x}}<br>%{{y:,.0f}} MW<extra></extra>",
+        ))
+    layout = _layout("Scatter Plot: Hour of Day vs Energy — by Season")
+    layout["xaxis"]["title"] = "Hour of Day"
+    layout["xaxis"]["tickmode"] = "linear"
+    layout["xaxis"]["tick0"] = 0
+    layout["xaxis"]["dtick"] = 2
+    layout["yaxis"]["title"] = "Energy (MW)"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 6. BOX PLOT  — sns.boxplot
+# 6. BOX PLOT
 # ══════════════════════════════════════════════
 def chart_box(df):
     if df.empty: return _empty()
-    df2 = df.copy()
-    df2["MonthName"] = pd.Categorical(
-        df2["MonthName"], categories=MONTH_ORDER, ordered=True)
-    df2.sort_values("MonthName", inplace=True)
+    months_present = [m for m in MONTH_ORDER
+                      if m in df["MonthName"].values]
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    sns.boxplot(data=df2, x="MonthName", y="AEP_MW",
-                color=BLUE, linewidth=1.0,
-                medianprops=dict(color=AMBER, linewidth=2),
-                whiskerprops=dict(color=TEXT_SUB),
-                capprops=dict(color=TEXT_SUB),
-                flierprops=dict(marker="o", markersize=2,
-                                alpha=0.25, color=TEXT_SUB),
-                boxprops=dict(alpha=0.6),
-                ax=ax)
-    _title(ax, "Box Plot: Energy Distribution by Month")
-    _labels(ax, "Month", "Energy (MW)")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+    fig = go.Figure()
+    for i, month in enumerate(months_present):
+        mdf = df[df["MonthName"] == month]["AEP_MW"]
+        # Use seaborn palette for per-month colors
+        r, g, b = SNS_PALETTE[i % len(SNS_PALETTE)]
+        color = f"rgba({int(r*255)},{int(g*255)},{int(b*255)},0.7)"
+        fig.add_trace(go.Box(
+            y=mdf, name=month,
+            marker=dict(color=color, outliercolor=TEXT_SUB, size=3),
+            line=dict(color=color),
+            boxmean=True,
+            hovertemplate=f"<b>{month}</b><br>%{{y:,.0f}} MW<extra></extra>",
+        ))
+    layout = _layout("Box Plot: Energy Distribution by Month")
+    layout["xaxis"]["title"] = "Month"
+    layout["yaxis"]["title"] = "Energy (MW)"
+    layout["showlegend"] = False
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 7. HEATMAP  — sns.heatmap
+# 7. HEATMAP
 # ══════════════════════════════════════════════
 def chart_heatmap(df):
     if df.empty or df["Month"].nunique() < 2: return _empty()
@@ -250,27 +251,32 @@ def chart_heatmap(df):
                            columns="Month", aggfunc="mean")
     pivot.columns = [MONTH_ORDER[c-1] for c in pivot.columns]
 
-    cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "modern", ["#0f172a", "#1e3a5f", BLUE,
-                   CYAN, EMERALD, AMBER, CORAL])
-    fig, ax = plt.subplots(figsize=(11, 6))
-    sns.heatmap(pivot, ax=ax, cmap=cmap,
-                linewidths=0.4, linecolor=BG, annot=False,
-                cbar_kws={"label": "Avg MW", "shrink": 0.7})
-    ax.set_facecolor(CARD_BG)
-    fig.patch.set_facecolor(BG)
-    _title(ax, "Heatmap: Avg Energy (MW) — Hour × Month")
-    _labels(ax, "Month", "Hour of Day")
-    ax.tick_params(colors=TEXT_SUB, labelsize=9)
-    cbar = ax.collections[0].colorbar
-    cbar.ax.yaxis.label.set_color(TEXT_SUB)
-    cbar.ax.tick_params(colors=TEXT_SUB)
-    plt.tight_layout()
+    # Use matplotlib colormap converted to plotly scale
+    plotly_scale = []
+    for i in range(10):
+        t = i / 9
+        r, g, b, _ = MPL_CMAP(t)
+        plotly_scale.append([t, f"rgb({int(r*255)},{int(g*255)},{int(b*255)})"])
+
+    fig = go.Figure(go.Heatmap(
+        z=pivot.values,
+        x=pivot.columns.tolist(),
+        y=pivot.index.tolist(),
+        colorscale=plotly_scale,
+        colorbar=dict(title=dict(text="Avg MW", font=dict(color=TEXT_SUB)),
+                      tickfont=dict(color=TEXT_SUB)),
+        hovertemplate="Month: <b>%{x}</b><br>Hour: <b>%{y}</b><br>%{z:,.0f} MW<extra></extra>",
+    ))
+    layout = _layout("Heatmap: Avg Energy (MW) — Hour × Month")
+    layout["xaxis"]["title"] = "Month"
+    layout["yaxis"]["title"] = "Hour of Day"
+    layout["yaxis"]["autorange"] = "reversed"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 8. AREA CHART  — sns.lineplot + fill
+# 8. AREA CHART
 # ══════════════════════════════════════════════
 def chart_area(df):
     if df.empty: return _empty()
@@ -280,103 +286,110 @@ def chart_area(df):
     daily["Roll7"]  = daily["AEP_MW"].rolling(7,  min_periods=1).mean()
     daily["Roll30"] = daily["AEP_MW"].rolling(30, min_periods=1).mean()
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    ax.fill_between(daily["Date"], daily["AEP_MW"],
-                    alpha=0.07, color=CYAN)
-    sns.lineplot(data=daily, x="Date", y="AEP_MW",
-                 color=CYAN, linewidth=0.6, alpha=0.4,
-                 label="Daily Avg", ax=ax)
-    sns.lineplot(data=daily, x="Date", y="Roll7",
-                 color=AMBER, linewidth=1.8,
-                 label="7-Day Avg", ax=ax)
-    sns.lineplot(data=daily, x="Date", y="Roll30",
-                 color=VIOLET, linewidth=2.2,
-                 linestyle="--", label="30-Day Avg", ax=ax)
-    _title(ax, "Area Chart: Daily Consumption with Rolling Averages")
-    _labels(ax, "Date", "Energy (MW)")
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    ax.legend(fontsize=9); _legend(ax)
-    plt.tight_layout()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=daily["Date"], y=daily["AEP_MW"],
+        mode="lines", line=dict(color=CYAN, width=0.6),
+        fill="tozeroy", fillcolor="rgba(6,182,212,0.07)",
+        name="Daily Avg", opacity=0.5,
+        hovertemplate="Daily: %{y:,.0f} MW<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=daily["Date"], y=daily["Roll7"],
+        mode="lines", line=dict(color=AMBER, width=2),
+        name="7-Day Avg",
+        hovertemplate="7-Day Avg: %{y:,.0f} MW<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=daily["Date"], y=daily["Roll30"],
+        mode="lines", line=dict(color=VIOLET, width=2.5, dash="dash"),
+        name="30-Day Avg",
+        hovertemplate="30-Day Avg: %{y:,.0f} MW<extra></extra>",
+    ))
+    layout = _layout("Area Chart: Daily Consumption with Rolling Averages")
+    layout["xaxis"]["title"] = "Date"
+    layout["yaxis"]["title"] = "Energy (MW)"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 9. COUNT PLOT  — sns.countplot
+# 9. COUNT PLOT
 # ══════════════════════════════════════════════
 def chart_count(df):
     if df.empty: return _empty()
-    df2 = df.copy()
-    df2["DayName"] = pd.Categorical(
-        df2["DayName"], categories=DAY_ORDER, ordered=True)
-    day_palette = {d: VIOLET if d in {"Sat","Sun"} else BLUE
-                   for d in DAY_ORDER}
+    counts = df["DayName"].value_counts()
+    ordered = [d for d in DAY_ORDER if d in counts.index]
+    counts  = counts.reindex(ordered)
+    colors  = [VIOLET if d in {"Sat","Sun"} else BLUE for d in ordered]
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.countplot(data=df2, x="DayName", order=DAY_ORDER,
-                  hue="DayName", palette=day_palette, legend=False,
-                  edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=BLUE,   label="Weekday"),
-        plt.Rectangle((0,0),1,1, color=VIOLET, label="Weekend"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Count Plot: Record Count by Day of Week")
-    _labels(ax, "Day", "Records")
-    plt.tight_layout()
+    fig = go.Figure(go.Bar(
+        x=ordered, y=counts.values,
+        marker_color=colors,
+        hovertemplate="<b>%{x}</b><br>%{y:,} records<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=BLUE, size=10), name="Weekday"))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=VIOLET, size=10), name="Weekend"))
+    layout = _layout("Count Plot: Record Count by Day of Week")
+    layout["xaxis"]["title"] = "Day"
+    layout["yaxis"]["title"] = "Records"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# 10. VIOLIN PLOT  — sns.violinplot
+# 10. VIOLIN PLOT
 # ══════════════════════════════════════════════
 def chart_violin(df):
     if df.empty: return _empty()
     season_order = [s for s in ["Winter","Spring","Summer","Autumn"]
                     if s in df["Season"].unique()]
-    palette = {s: SEASON_COLORS[s] for s in season_order}
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    sns.violinplot(data=df, x="Season", y="AEP_MW",
-                   order=season_order, palette=palette,
-                   hue="Season", legend=False,
-                   inner="box", linewidth=1.0,
-                   alpha=0.75, cut=0, ax=ax)
-    _title(ax, "Violin Plot: Energy Distribution by Season")
-    _labels(ax, "Season", "Energy (MW)")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+    fig = go.Figure()
+    for season in season_order:
+        sdf = df[df["Season"] == season]["AEP_MW"]
+        fig.add_trace(go.Violin(
+            y=sdf, name=season,
+            box_visible=True,
+            meanline_visible=True,
+            fillcolor=SEASON_COLORS[season],
+            opacity=0.75,
+            line_color=SEASON_COLORS[season],
+            hovertemplate=f"<b>{season}</b><br>%{{y:,.0f}} MW<extra></extra>",
+        ))
+    layout = _layout("Violin Plot: Energy Distribution by Season")
+    layout["xaxis"]["title"] = "Season"
+    layout["yaxis"]["title"] = "Energy (MW)"
+    fig.update_layout(**layout)
     return fig
 
 
 # ══════════════════════════════════════════════
-# BONUS — YEAR-OVER-YEAR  — sns.barplot
+# BONUS — YEAR-OVER-YEAR BAR
 # ══════════════════════════════════════════════
 def chart_yearly_avg(df):
     if df.empty: return _empty()
     yearly = df.groupby("Year")["AEP_MW"].mean().reset_index()
     peak_y = yearly.loc[yearly["AEP_MW"].idxmax(), "Year"]
     low_y  = yearly.loc[yearly["AEP_MW"].idxmin(), "Year"]
-    colors = [CORAL   if y == peak_y
-              else EMERALD if y == low_y
-              else BLUE
+    colors = [CORAL if y == peak_y else EMERALD if y == low_y else BLUE
               for y in yearly["Year"]]
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    yearly["YearStr"] = yearly["Year"].astype(str)
-    color_map = dict(zip(yearly["YearStr"], colors))
-    sns.barplot(data=yearly, x="YearStr", y="AEP_MW",
-                hue="YearStr", palette=color_map, legend=False,
-                edgecolor=BG, linewidth=0.3, ax=ax)
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=9)
-    ax.legend(handles=[
-        plt.Rectangle((0,0),1,1, color=CORAL,   label="Highest Year"),
-        plt.Rectangle((0,0),1,1, color=EMERALD, label="Lowest Year"),
-        plt.Rectangle((0,0),1,1, color=BLUE,    label="Other"),
-    ], fontsize=9); _legend(ax)
-    _title(ax, "Bar Chart (Bonus): Average Annual Energy Consumption")
-    _labels(ax, "Year", "Avg MW")
-    ax.yaxis.set_major_formatter(FuncFormatter(_mw))
-    plt.tight_layout()
+    fig = go.Figure(go.Bar(
+        x=yearly["Year"].astype(str), y=yearly["AEP_MW"],
+        marker_color=colors,
+        hovertemplate="<b>%{x}</b><br>Avg: %{y:,.0f} MW<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=CORAL,   size=10), name="Highest Year"))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=EMERALD, size=10), name="Lowest Year"))
+    fig.add_trace(go.Scatter(x=[], y=[], mode="markers",
+        marker=dict(color=BLUE,    size=10), name="Other"))
+    layout = _layout("Bar Chart (Bonus): Average Annual Energy Consumption")
+    layout["xaxis"]["title"] = "Year"
+    layout["yaxis"]["title"] = "Avg MW"
+    fig.update_layout(**layout)
     return fig
