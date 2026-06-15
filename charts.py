@@ -80,7 +80,31 @@ def _empty(msg="No data for selected filters."):
         text=msg, x=0.5, y=0.5, xref="paper", yref="paper",
         showarrow=False, font=dict(color=TEXT_SUB, size=13))
     fig.update_layout(**_layout())
-    return fig
+    return fig_to_html(fig)
+
+
+def fig_to_html(fig):
+    """Convert plotly figure to HTML string for gr.HTML()"""
+    import plotly.io as pio
+    html = pio.to_html(
+        fig,
+        include_plotlyjs="cdn",
+        full_html=False,
+        config={"displayModeBar": True,
+                "modeBarButtonsToAdd": ["downloadImage"],
+                "toImageButtonOptions": {
+                    "format": "png",
+                    "filename": "chart",
+                    "height": 500,
+                    "width": 900,
+                    "scale": 2
+                }
+        }
+    )
+    return f'''<div style="width:100%;background:{BG};
+                border-radius:12px;padding:8px;">
+                {html}</div>'''
+
 
 
 # ══════════════════════════════════════════════
@@ -100,7 +124,7 @@ def chart_pie(df):
         hovertemplate="<b>%{label}</b><br>%{value:,.0f} MW<br>%{percent}<extra></extra>",
     ))
     fig.update_layout(**_layout("Pie Chart: Energy Share by Season"))
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -125,7 +149,7 @@ def chart_histogram(df):
     layout["xaxis"]["title"] = "Energy (MW)"
     layout["yaxis"]["title"] = "Frequency"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -148,7 +172,7 @@ def chart_line(df):
     layout["xaxis"]["title"] = "Date"
     layout["yaxis"]["title"] = "Avg MW"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -179,7 +203,7 @@ def chart_bar(df):
     layout["xaxis"]["tickangle"] = 45
     layout["yaxis"]["title"] = "Avg MW"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -207,7 +231,7 @@ def chart_scatter(df):
     layout["xaxis"]["dtick"] = 2
     layout["yaxis"]["title"] = "Energy (MW)"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -236,7 +260,7 @@ def chart_box(df):
     layout["yaxis"]["title"] = "Energy (MW)"
     layout["showlegend"] = False
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -269,7 +293,7 @@ def chart_heatmap(df):
     layout["yaxis"]["title"] = "Hour of Day"
     layout["yaxis"]["autorange"] = "reversed"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -307,7 +331,7 @@ def chart_area(df):
     layout["xaxis"]["title"] = "Date"
     layout["yaxis"]["title"] = "Energy (MW)"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -333,7 +357,7 @@ def chart_count(df):
     layout["xaxis"]["title"] = "Day"
     layout["yaxis"]["title"] = "Records"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -360,7 +384,7 @@ def chart_violin(df):
     layout["xaxis"]["title"] = "Season"
     layout["yaxis"]["title"] = "Energy (MW)"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
 
 
 # ══════════════════════════════════════════════
@@ -389,4 +413,4 @@ def chart_yearly_avg(df):
     layout["xaxis"]["title"] = "Year"
     layout["yaxis"]["title"] = "Avg MW"
     fig.update_layout(**layout)
-    return fig
+    return fig_to_html(fig)
