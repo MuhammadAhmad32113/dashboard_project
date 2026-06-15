@@ -347,29 +347,29 @@ with gr.Blocks(
     with gr.Tabs():
         with gr.Tab("Distribution & Composition"):
             with gr.Row():
-                pie_plot  = gr.Plot()
-                hist_plot = gr.Plot()
+                pie_plot  = gr.HTML()
+                hist_plot = gr.HTML()
 
         with gr.Tab("Trends Over Time"):
             with gr.Row():
-                line_plot = gr.Plot()
+                line_plot = gr.HTML()
             with gr.Row():
-                area_plot = gr.Plot()
+                area_plot = gr.HTML()
 
         with gr.Tab("Categorical Comparisons"):
             with gr.Row():
-                bar_plot   = gr.Plot()
-                count_plot = gr.Plot()
+                bar_plot   = gr.HTML()
+                count_plot = gr.HTML()
             with gr.Row():
-                yearly_plot = gr.Plot()
+                yearly_plot = gr.HTML()
 
         with gr.Tab("Statistical Analysis"):
             with gr.Row():
-                scatter_plot = gr.Plot()
-                box_plot     = gr.Plot()
+                scatter_plot = gr.HTML()
+                box_plot     = gr.HTML()
             with gr.Row():
-                violin_plot  = gr.Plot()
-                heatmap_plot = gr.Plot()
+                violin_plot  = gr.HTML()
+                heatmap_plot = gr.HTML()
 
     inputs  = [year_start, year_end, seasons_cb, months_ms,
                mw_low, mw_high, day_type_cb, keyword_box]
